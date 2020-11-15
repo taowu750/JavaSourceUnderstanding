@@ -6,7 +6,9 @@ public final class Boolean implements java.io.Serializable, Comparable<Boolean>
 ## 1. 属性
 
 ### 1.1 TYPE
-`public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveClass("boolean")`
+```java
+public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveClass("boolean")
+```
 这个属性等同于类字面常量`Boolean.class`，其中`Class.getPrimitiveClass()`方法是一个native方法，
 专门用来获取基本类型的`Class`对象。
 
