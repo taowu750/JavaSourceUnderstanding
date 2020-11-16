@@ -23,7 +23,7 @@ public static boolean getBoolean(String name)
 
 ## 3. 要点
 
-### 3.1 生成`Boolean`对象
+### 3.1 生成Boolean对象
 要生成一个`Boolean`对象，最好使用`Boolean.valueof(b)`方法，这会直接返回`Boolean`中预定义的`TRUE`或者`FALSE`对象，
 而不会重新生成一个`Boolean`对象。
 
