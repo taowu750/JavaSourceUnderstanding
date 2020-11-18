@@ -12,13 +12,19 @@ import java.io.IOException;
  */
 public class CharsetAndEncoding {
 
+    /**
+     * 操作系统默认字符集
+     */
     @Test
     public void testSystemDefaultCharset() {
         System.out.println(System.getProperty("file.encoding"));
     }
 
+    /**
+     * Java 一个 char 表示一个 UTF-16 代码单元
+     */
     @Test
-    public void testJavaEncoding() {
+    public void testJavaChar() {
         char han = '汉';
         System.out.printf("%x\n", (short) han);
 
@@ -26,15 +32,18 @@ public class CharsetAndEncoding {
         System.out.println(han);
     }
 
+    /**
+     * Java 格式化 API 支持增补文字
+     */
     @Test
-    public void testSupplementCharacter() {
-        String s = String.valueOf(Character.toChars(0x2F81A));
-        char[] chars = s.toCharArray();
-        for (char c : chars) {
-            System.out.printf("%x\n", (short) c);
-        }
+    public void testPrintf() {
+        int codePoint = 0x2F81A;  // 冬
+        System.out.printf("Character %c is invalid\n", codePoint);
     }
 
+    /**
+     * 代理部分不能使用
+     */
     @Test
     public void testCodePoint() throws IOException {
         // 从0xD800到0xDFFF的码位是不能分配给其他字符的。

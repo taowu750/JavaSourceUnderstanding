@@ -1,18 +1,19 @@
 package ujava.lang;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * 对{@link Object}进行测试和验证
  */
 public class ObjectTest {
 
+    /**
+     * 在 {@code finalize} 方法中“复活”对象
+     */
     @Test
     public void testFinalize() throws InterruptedException {
         User user = new User();
