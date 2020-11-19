@@ -3,18 +3,18 @@ java.lang.Boolean类，下面是它的声明:
 public final class Boolean implements java.io.Serializable, Comparable<Boolean>
 ```
 
-## 1. 属性
+# 1. 属性
 
-### 1.1 TYPE
+## 1.1 TYPE
 ```java
 public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveClass("boolean")
 ```
 这个属性等同于类字面常量`Boolean.class`，其中`Class.getPrimitiveClass()`方法是一个native方法，
 专门用来获取基本类型的`Class`对象。
 
-## 2. 方法
+# 2. 方法
 
-### 2.1 parseBoolean()
+## 2.1 parseBoolean()
 ```java
     public static boolean parseBoolean(String s) {
         return ((s != null) && s.equalsIgnoreCase("true"));
@@ -22,7 +22,7 @@ public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveCla
 ```
 `parseBoolean`方法只在参数等于`"true"`的情况下返回`true`。
 
-### 2.2 getBoolean()
+## 2.2 getBoolean()
 ```java
 public static boolean getBoolean(String name) {
     boolean result = false;
@@ -36,13 +36,13 @@ public static boolean getBoolean(String name) {
 参数`name`是系统属性名称，当这个属性值不为`true`或不存在时返回`false`，否则返回`true`
 
 
-## 3. 要点
+# 3. 要点
 
-### 3.1 生成Boolean对象
+## 3.1 生成Boolean对象
 要生成一个`Boolean`对象，最好使用`Boolean.valueof()`方法，这会直接返回`Boolean`中预定义的`TRUE`或者`FALSE`对象，
 而不会重新生成一个`Boolean`对象。将`true`和`false`赋值给`Boolean`引用时，也会自动调用`Boolean.valueof()`方法。
 
-### 3.2 hashCode()
+## 3.2 hashCode()
 `Boolean`的`hashCode()`源码如下：
 ```java
 @Override

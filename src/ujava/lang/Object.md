@@ -4,9 +4,9 @@ public class Object
 ```
 这是`Java`中所有类的基类，任何类最终都会溯源到`Object`类。
 
-## 1. 方法
+# 1. 方法
 
-### 1.1 equals
+## 1.1 equals
 在Java规范中，它对equals()方法的使用必须要遵循如下几个规则：
 1. 自反性：对于任何非空引用值 x，x.equals(x) 都应返回 true。
 2. 对称性：对于任何非空引用值 x 和 y，当且仅当y.equals(x) 返回 true 时，x.equals(y) 才应返回 true。
@@ -50,7 +50,7 @@ public boolean equals(Object obj) {
 }
 ```
 
-### 1.2 hashCode
+## 1.2 hashCode
 默认的`hashCode`方法返回对象的地址（这依赖于`JVM`的实现）。如果我们希望对象用在`HashMap`、`HashSet`之类的容器中，
 那么最好重写`hashCode`方法。哈希码的最佳实践在[ujava/lang/哈希码.md][hashCode]中给出。
 
@@ -62,7 +62,7 @@ public boolean equals(Object obj) {
 还需要注意，`hashCode`方法最好不要依赖对象中易变的字段。如果对象作为`HashMap`中的键，它的某个字段值一变，
 那么用这个对象就不能访问原来在`HashMap`中的值了。如果需要依赖易变字段的话，那么保证该字段可以表示对象的类型，如姓名等。
 
-### 1.3 clone
+## 1.3 clone
 ```java
 protected native Object clone() throws CloneNotSupportedException
 ```
@@ -174,7 +174,7 @@ public class Student implements Cloneable {
 }
 ```
 
-### 1.4 notify
+## 1.4 notify
 ```java
 public final native void notify();
 
@@ -188,7 +188,7 @@ public final native void notifyAll();
 所以`Thread`也可以调用者三个方法）？其实这个问题很简单，由于每个对象都拥有`monitor`，所以让当前线程等待某个对象的锁，
 当然应该通过这个对象来操作了。当前线程可能会等待多个线程的锁，如果通过线程来操作，情况就非常复杂了。
 
-### 1.5 wait
+## 1.5 wait
 ```java
 public final native void wait(long timeout) throws InterruptedException;
 
@@ -234,7 +234,7 @@ synchronized (obj) {
 
 需要注意，检查条件的语句必须在同步块中，否则可能会发生信号错失的情况，从而导致死锁。
 
-### 1.6 finalize
+## 1.6 finalize
 ```java
 protected void finalize() throws Throwable { }
 ```

@@ -9,7 +9,7 @@ public interface CharSequence
 在Java8之后，`CharSequence`多了两个默认方法：`chars()`和`codePoints()`。
 它们返回`IntStream`，分别产生字符和代码点流。
 
-## 1. 方法
+# 1. 方法
 
 ## chars
 ```java
@@ -49,7 +49,7 @@ public default IntStream chars() {
 可以看出，这个方法使用`StreamSupport.intStream()`和`Spliterators.spliterator()`方法创建`IntStream`。
 其中用到了一个接口[java.util.PrimitiveIterator.OfInt][PrimitiveIterator]。
 
-## codePoints
+# codePoints
 ```java
 // TODO: 需要深入理解代码点等相关概念
 public default IntStream codePoints() {

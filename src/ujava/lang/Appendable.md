@@ -9,7 +9,7 @@ public interface Appendable
 
 <!-- TODO: 了解 Formatter -->
 
-## 1. 方法
+# 1. 方法
 
 1. `Appendable append(CharSequence csq) throws IOException;`
 2. `Appendable append(CharSequence csq, int start, int end) throws IOException;`

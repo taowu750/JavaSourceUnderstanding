@@ -3,9 +3,9 @@
 public final class Byte extends Number implements Comparable<Byte>
 ```
 
-## 内部类/接口
+# 内部类/接口
 
-### ByteCache 静态类
+## ByteCache 静态类
 ```java
 private static class ByteCache {
     private ByteCache(){}

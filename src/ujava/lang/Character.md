@@ -11,11 +11,11 @@ public final class Character implements java.io.Serializable, Comparable<Charact
 
 [有关 Unicode 和 Java 增补字符集的知识请点击这个链接][charset]。
 
-## 1. 成员字段
+# 1. 成员字段
 
-### 1.1 常量
+## 1.1 常量
 
-#### 1.1.1 进制位数
+### 1.1.1 进制位数
 ```java
 // 最小2进制
 public static final int MIN_RADIX = 2;
@@ -26,19 +26,19 @@ public static final int MAX_RADIX = 36;
 进制转换方法包括：`digit(char ch, int radix)`, `forDigit(int digit, int radix)`, `Integer.toString(int i, int radix)`, 
 `Integer.valueOf(String s)`。
 
-#### 1.1.2 范围
+### 1.1.2 范围
 ```java
 public static final char MIN_VALUE = '\u0000';
 
 public static final char MAX_VALUE = '\uFFFF';
 ```
 
-#### 1.1.3 TYPE
+### 1.1.3 TYPE
 ```java
 public static final Class<Character> TYPE = (Class<Character>) Class.getPrimitiveClass("char");
 ```
 
-#### 1.1.4 Unicode 字符一般类别属性
+### 1.1.4 Unicode 字符一般类别属性
 ```java
 // "Cn"：其他，未赋值（不存在任何字符具有此属性）
 public static final byte UNASSIGNED = 0;
@@ -135,7 +135,7 @@ static final int ERROR = 0xFFFFFFFF;
 以上字符由字符 g(u+0067) 和 U+0308 组合而成，其中字符 g 就是基本字符，而 U+0308 就是组合字符。
 
 
-#### 1.1.5 双向字符类型
+### 1.1.5 双向字符类型
 ```java
 // 未定义的方向类型。在 Unicode 标准里未定义的 char 具有这个方向类型 
 public static final byte DIRECTIONALITY_UNDEFINED = -1;

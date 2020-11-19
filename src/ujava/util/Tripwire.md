@@ -8,24 +8,24 @@ final class Tripwire
 
 `Tripwire`类默认情况下关闭，要想启用就需要设置系统属性`org.openjdk.java.util.stream.tripwire`为`true`。
 
-## 1. 属性
+# 1. 属性
 
-### 1.1 TRIPWIRE_PROPERTY
+## 1.1 TRIPWIRE_PROPERTY
 ```java
 private static final String TRIPWIRE_PROPERTY = "org.openjdk.java.util.stream.tripwire";
 ```
 
 <!-- TODO: AccessController 和 PlatformLogger 类 -->
 
-### 1.2 ENABLED
+## 1.2 ENABLED
 ```java
 static final boolean ENABLED = AccessController.doPrivileged(
             (PrivilegedAction<Boolean>) () -> Boolean.getBoolean(TRIPWIRE_PROPERTY));
 ```
 
-## 2. 方法
+# 2. 方法
 
-### 2.1 trip
+## 2.1 trip
 ```java
 static void trip(Class<?> trippingClass, String msg) {
     PlatformLogger.getLogger(trippingClass.getName()).warning(msg, trippingClass.getName());
