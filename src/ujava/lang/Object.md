@@ -303,4 +303,4 @@ R={reachable, finalizer-reachable, unreachable}。各状态含义如下：
 
 [hashCode]: 哈希码.md
 [Object]: ../../../test/ujava/lang/ObjectTest.java
-[finalize]: finalize.jpg
+[finalize]: ../../../res/img/object-finalize.jpg
