@@ -3,4 +3,4 @@ META-INF
 out
 
 *.iml
-test/Test.java
+test/OtherTest.java
