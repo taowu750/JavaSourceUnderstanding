@@ -19,7 +19,7 @@ public final class Character implements java.io.Serializable, Comparable<Charact
 3. 2.9 节中的位操作替代布尔判断。
 4. 3.2 节中的表驱动法；`enum`的使用
 
-[有关 Unicode 和 Java 增补字符集的知识请点击这个链接][charset]。
+有关 Unicode 和 Java 增补字符集的知识参见[字符集编码][charset]。
 
 # 1. 成员字段
 
@@ -282,7 +282,7 @@ public static char lowSurrogate(int codePoint) {
     return (char) ((codePoint & 0x3ff) + MIN_LOW_SURROGATE);
 }
 ```
-代码点编码为代理部分的方法可以参见《字符集编码.md》
+代码点编码为代理部分的方法可以参见[字符集编码][charset]。
 
 ## 2.4 codePoint 判断方法
 ```java
@@ -330,6 +330,7 @@ public static boolean isSurrogatePair(char high, char low) {
     return isHighSurrogate(high) && isLowSurrogate(low);
 }
 ```
+常量折叠参见[常量折叠.md][constant-fold]。
 
 ## 2.5 字符转化为 codePoint
 ```java
@@ -1019,3 +1020,4 @@ private static class CharacterCache {
 [bidirectional]: Unicode中的BIDI双向性算法.md
 [combine-char]: ../../../res/img/char-combine.png
 [script-name]: http://www.unicode.org/reports/tr24/
+[constant-fold]: 常量折叠.md
