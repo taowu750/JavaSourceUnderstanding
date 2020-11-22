@@ -17,7 +17,7 @@ public final class Character implements java.io.Serializable, Comparable<Charact
 1. 2.4 节中的常量折叠
 2. 2.6 节中的 "backwards"
 3. 2.9 节中的位操作替代布尔判断。
-4. 3.2 节中的表驱动法；`enum`的使用
+4. 3.2 节中的表驱动法（表驱动法具有良好的[局部性][locality]）；`enum`的使用
 
 有关 Unicode 和 Java 增补字符集的知识参见[字符集编码][charset]。
 
@@ -514,6 +514,7 @@ public static int offsetByCodePoints(CharSequence seq, int index, int codePointO
 ```
 
 ## 2.9 判断字符/代码点的一般属性类别
+<!-- TODO: 解读 CharacterName 和 CharacterData 类 -->
 ```java
 // 判断字符 ch 是不是小写字母 
 public static boolean isLowerCase(char ch) {
@@ -1021,3 +1022,4 @@ private static class CharacterCache {
 [combine-char]: ../../../res/img/char-combine.png
 [script-name]: http://www.unicode.org/reports/tr24/
 [constant-fold]: 常量折叠.md
+[locality]: 程序的局部性原理.md
