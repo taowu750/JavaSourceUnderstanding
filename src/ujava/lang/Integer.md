@@ -803,6 +803,50 @@ public static int reverseBytes(int i) {
 }
 ```
 
+# 3. 内部类/接口/枚举
+
+## 3.1 IntegerCache
+```java
+// Integer 对象缓存池
+private static class IntegerCache {
+    static final int low = -128;
+    static final int high;
+    static final Integer cache[];
+
+    static {
+        // high value may be configured by property
+        int h = 127;
+        // Integer 缓存池所能缓存的最大值可在配置文件中配置，最小值固定为 -128
+        String integerCacheHighPropValue =
+            sun.misc.VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
+        if (integerCacheHighPropValue != null) {
+            try {
+                int i = parseInt(integerCacheHighPropValue);
+                // 至少会缓存到 127
+                i = Math.max(i, 127);
+                // Maximum array size is Integer.MAX_VALUE
+                // 因为还要缓存负数值，所以注意数字长度不能超出 MAX_VALUE
+                h = Math.min(i, Integer.MAX_VALUE - (-low) -1);
+            } catch( NumberFormatException nfe) {
+                // If the property cannot be parsed into an int, ignore it.
+            }
+        }
+        high = h;
+
+        cache = new Integer[(high - low) + 1];
+        int j = low;
+        for(int k = 0; k < cache.length; k++)
+            cache[k] = new Integer(j++);
+
+        // range [-128, 127] must be interned (JLS7 5.1.7)
+        assert IntegerCache.high >= 127;
+    }
+
+    private IntegerCache() {}
+}
+```
+`Integer`对象缓存池，缓存范围为`[-128, 127]`，其中最大值可以由`JVM`配置。
+
 
 [integer]: ../../../test/ujava/lang/IntegerTest.java
 [locality]: 程序的局部性原理.md
