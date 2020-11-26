@@ -2,7 +2,7 @@
 ```java
 public final class Integer extends Number implements Comparable<Integer>
 ```
-`Integer`是基本类型`int`的包装器类。此类提供了几种将`int`转换为`String`并将`String`转换为`int`的方法，
+`Integer`是基本类型`int`的包装器类。此类提供了几种将`int`转换为`String`并将`String`转换为`int`的方法、
 无符号运算、位操作以及其他在处理`int`时有用的常量和方法。
 
 `Integer`代码中比较值得注意的有：
@@ -36,7 +36,7 @@ public final class Integer extends Number implements Comparable<Integer>
 // int 最大值，2^31 - 1，21,4748,3647
 @Native public static final int   MAX_VALUE = 0x7fffffff;
 ```
-`@Native`注解参见[Native.md][native]
+`@Native`注解参见[Native.md][native]。
 
 ## 1.2 TYPE
 ```java
@@ -90,7 +90,7 @@ final static char [] DigitOnes = {
 
 # 2. 方法
 
- ## 2.1 unsigned 运算
+ ## 2.1 无符号运算
 ```java
 // 将 int x 转换为无符号 long
 public static long toUnsignedLong(int x) {
@@ -141,6 +141,7 @@ public static int numberOfLeadingZeros(int i) {
     // 如果 i 的前 30 位为 0，将 i 左移 2 位
     if (i >>> 30 == 0) { n +=  2; i <<=  2; }
     // 每次移一半，二分法
+    // 对最后两个数判断
     n -= i >>> 31;
     return n;
 }
@@ -160,7 +161,7 @@ public static int numberOfTrailingZeros(int i) {
     // 再左移 2 位，判断后 2 位有没有 1
     y = i << 2; if (y != 0) { n = n - 2; i = y; }
     // 判断最后一位是不是 1
-    // 如果最后一位是 1，则之前所有移位操作都会左右到 i 上，它会被移到开头第 2 位上
+    // 如果最后一位是 1，则之前所有移位操作都会作用到 i 上，1 会被移到开头第 2 位上
     return n - ((i << 1) >>> 31);
 }
 ```
@@ -227,6 +228,7 @@ public static String toString(int i) {
     int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
     char[] buf = new char[size];
     getChars(i, size, buf);
+    // 下面是 String 的包构造器，直接将数组 buf 作为 String 的底层数组
     return new String(buf, true);
 }
 
@@ -367,15 +369,14 @@ public static String toBinaryString(int i) {
 private static String toUnsignedString0(int val, int shift) {
     // Integer.numberOfLeadingZeros 返回 i 的二进制补码形式中最高位之后的零位数目。
     // mag 表示无符号整数 val 有效位（除前导 0）的个数
-    // 表示 val 的字符数应该为 ⌈mag / shift⌉
     // assert shift > 0 && shift <=5 : "Illegal shift value";
     int mag = Integer.SIZE - Integer.numberOfLeadingZeros(val);
+    // 表示 val 的字符数应该为 ⌈mag / shift⌉
     int chars = Math.max(((mag + (shift - 1)) / shift), 1);
     char[] buf = new char[chars];
 
     formatUnsignedInt(val, shift, buf, 0, chars);
 
-    // 下面是 String 的包构造器，直接将数组 buf 作为 String 的底层数组
     // Use special constructor which takes over "buf".
     return new String(buf, true);
 }
@@ -399,7 +400,7 @@ static int formatUnsignedInt(int val, int shift, char[] buf, int offset, int len
 ```java
 // 将字符串解析为 radix 进制的数字。当 radix 非法时将会抛出异常，这和 2.3 toString 不一样
 public static int parseInt(String s, int radix) throws NumberFormatException {
-    // 此方法可能在虚拟机初始化 IntegerCache 之前被调用。注意不要使用 valueOf 方法
+    // 此方法可能在虚拟机初始化 IntegerCache 时被调用。注意不要使用 valueOf 方法
     /*
      * WARNING: This method may be invoked early during VM initialization
      * before IntegerCache is initialized. Care must be taken to not use
@@ -821,6 +822,7 @@ private static class IntegerCache {
             sun.misc.VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
         if (integerCacheHighPropValue != null) {
             try {
+                // 这里使用到了 parseInt 方法
                 int i = parseInt(integerCacheHighPropValue);
                 // 至少会缓存到 127
                 i = Math.max(i, 127);

@@ -23,9 +23,7 @@ public final class Character implements java.io.Serializable, Comparable<Charact
 
 # 1. 成员字段
 
-## 1.1 常量
-
-### 1.1.1 进制位数
+## 1.1 进制位数
 ```java
 // 最小2进制
 public static final int MIN_RADIX = 2;
@@ -36,19 +34,19 @@ public static final int MAX_RADIX = 36;
 进制转换方法包括：`digit(char ch, int radix)`, `forDigit(int digit, int radix)`, `Integer.toString(int i, int radix)`, 
 `Integer.valueOf(String s)`。
 
-### 1.1.2 范围
+## 1.2 范围
 ```java
 public static final char MIN_VALUE = '\u0000';
 
 public static final char MAX_VALUE = '\uFFFF';
 ```
 
-### 1.1.3 TYPE
+## 1.3 TYPE
 ```java
 public static final Class<Character> TYPE = (Class<Character>) Class.getPrimitiveClass("char");
 ```
 
-### 1.1.4 Unicode 字符一般类别属性
+## 1.4 Unicode 字符一般类别属性
 ```java
 // "Cn"：其他，未赋值（不存在任何字符具有此属性）
 public static final byte UNASSIGNED = 0;
@@ -148,7 +146,7 @@ static final int ERROR = 0xFFFFFFFF;
 以上字符由字符 g(u+0067) 和 U+0308 组合而成，其中字符 g 就是基本字符，而 U+0308 就是组合字符。
 
 
-### 1.1.5 双向字符类型
+## 1.5 双向字符类型
 ```java
 // 未定义的方向类型。在 Unicode 标准里未定义的 char 具有这个方向类型 
 public static final byte DIRECTIONALITY_UNDEFINED = -1;
@@ -213,7 +211,7 @@ public static final byte DIRECTIONALITY_POP_DIRECTIONAL_FORMAT = 18;
 [有关双向性的问题参见这个链接][bidirectional]。
 由于`Java8`采用的是`Unicode 6.2`，所以*运行等级和隔离运行序列*相关内容没有被加入其中。
 
-### 1.1.6 代理范围
+## 1.6 代理范围
 ```java
 // 高代理范围最小值
 public static final char MIN_HIGH_SURROGATE = '\uD800';
@@ -234,7 +232,7 @@ public static final char MIN_SURROGATE = MIN_HIGH_SURROGATE;
 public static final char MAX_SURROGATE = MAX_LOW_SURROGATE;
 ```
 
-### 1.1.7 代码点范围
+## 1.7 代码点范围
 ```java
 // 增补字符最小代码点
 public static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x010000;
