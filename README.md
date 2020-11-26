@@ -19,19 +19,20 @@
 2. 深刻理解: 这个级别要求的类，全都是一些进阶到高级所必须了解的
     - java.lang.reflect: 反射要了解清楚的话，需要搞明白JVM的类加载机制
     - java.util.concurrent: 需要了解并发、多线程的相关知识
+    - java.util.stream: `Java8`新特性流
     - java.nio: 需要了解非阻塞io
     - java.net
     - javax.net: 网络IO要搞清楚的话，需要清楚TCP/IP和HTTP、HTTPS
 3. 会用即可
     - java.lang.annotation
     - java.lang.ref
+    - java.math
     - java.util.regex
     - java.util.logging
     - java.util.prefs
     - java.util.jar
     - java.util.zip
     - javax.annotation.*
-    - java.math
     - java.rmi.*
     - javax.rmi.*
     - java.security.*
