@@ -353,5 +353,5 @@ P 系列算法是解析字符顺序时的第一步。下面为bidi的各种算�
 [iso-seg3]: ../../../res/img/char-isolation-segment3.png
 [bidi-detail]: https://blog.csdn.net/hyongilfmmm/article/details/102780470
 
-<b id="f1">1.</b> 参考 https://www.jianshu.com/p/6aa9061ffa42。 [↩](#a1)  
-<b id="f2">2.</b> 参考 https://mp.weixin.qq.com/s/_v5bfQz-AwuBJHzEC4_q0Q。 [↩](#a2)
+<b id="f1">\[1\]</b> 参考 https://www.jianshu.com/p/6aa9061ffa42。 [↩](#a1)  
+<b id="f2">\[2\]</b> 参考 https://mp.weixin.qq.com/s/_v5bfQz-AwuBJHzEC4_q0Q。 [↩](#a2)

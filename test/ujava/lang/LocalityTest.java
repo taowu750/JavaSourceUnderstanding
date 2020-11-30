@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 局部性原理验证
  */
-public class Locality {
+public class LocalityTest {
 
     static final int LEN = 10000;
     static int[][] arr;

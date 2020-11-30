@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 溢出和截断测试
  */
-public class OverflowAndTruncation {
+public class OverflowAndTruncationTest {
 
     /**
      * 测试最大、最小值的溢出

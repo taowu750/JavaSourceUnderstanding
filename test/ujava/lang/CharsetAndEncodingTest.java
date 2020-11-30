@@ -10,7 +10,7 @@ import java.io.IOException;
 /**
  * 对编码字符集和字符集编码的验证。
  */
-public class CharsetAndEncoding {
+public class CharsetAndEncodingTest {
 
     /**
      * 操作系统默认字符集
