@@ -21,6 +21,8 @@ public final class Character implements java.io.Serializable, Comparable<Charact
 
 有关 Unicode 和 Java 增补字符集的知识参见[字符集编码][charset]。
 
+使用`Character`类时可能会有[装箱拆箱操作][box]。
+
 # 1. 成员字段
 
 ## 1.1 进制位数
@@ -1015,6 +1017,7 @@ private static class CharacterCache {
 对象缓存池，缓存了 128 个`ASCII`字符。
 
 
+[box]: 自动装箱与拆箱.md
 [charset]: 字符集编码.md
 [bidirectional]: Unicode中的BIDI双向性算法.md
 [combine-char]: ../../../res/img/char-combine.png

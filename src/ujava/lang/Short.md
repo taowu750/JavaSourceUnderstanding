@@ -8,6 +8,8 @@ public final class Short extends Number implements Comparable<Short>
 `Short`类的大部分方法原理和`Integer`一样，方法比`Integer`少很多。实际上，它的很多操作都使用`Integer`方法实现。
 看完了`Integer`类，你就会发现这是一个乏善可陈的类。
 
+使用`Short`类时可能会有[装箱拆箱操作][box]。
+
 # 1. 成员字段
 
 ## 1.1 范围
@@ -123,3 +125,6 @@ private static class ShortCache {
     }
 }
 ```
+
+
+[box]: 自动装箱与拆箱.md

@@ -2,6 +2,9 @@
 ```java
 public final class Byte extends Number implements Comparable<Byte>
 ```
+`Byte`类是基本类型`byte`的包装器类型。
+
+使用`Byte`类时可能会有[装箱拆箱操作][box]。
 
 # 内部类/接口
 
@@ -19,3 +22,6 @@ private static class ByteCache {
 }
 ```
 见名知意，这个类缓存了静态类缓存了从`byte`最小值`-128`到最大值`127`的所有`byte`值。
+
+
+[box]: 自动装箱与拆箱.md

@@ -26,6 +26,8 @@ public final class Integer extends Number implements Comparable<Integer>
 
 `Integer`类的测试和验证在[IntegerTest.java][integer]文件中。
 
+使用`Integer`类时可能会有[装箱拆箱操作][box]。
+
 # 1. 成员字段
 
 ## 1.1 范围
@@ -851,6 +853,7 @@ private static class IntegerCache {
 
 
 [integer]: ../../../test/ujava/lang/IntegerTest.java
+[box]: 自动装箱与拆箱.md
 [locality]: 程序的局部性原理.md
 [native]: annotation/Native.md
 [division]: https://gmplib.org/~tege/divcnst-pldi94.pdf

@@ -35,7 +35,7 @@ public class FloatingNumberTest {
                 System.out.print(' ');
         }
         System.out.println();
-    };;
+    };
 
     /**
      * 测试{@code float}的二进制表示

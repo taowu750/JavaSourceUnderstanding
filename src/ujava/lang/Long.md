@@ -10,6 +10,8 @@ public final class Long extends Number implements Comparable<Long>
 `Long`代码中比较值得注意的有：
 1. 2.5 `toUnsignedString` & 2.6 `parseUnsignedLong`：分离最后一位数字和其余数字，来求无符号结果
 
+使用`Long`类时可能会有[装箱拆箱操作][box]。
+
 # 1. 成员字段
 
 ## 1.1 范围
@@ -762,5 +764,6 @@ private static class LongCache {
 ```
 
 
+[box]: 自动装箱与拆箱.md
 [integer]: Integer.md
 [native]: annotation/Native.md

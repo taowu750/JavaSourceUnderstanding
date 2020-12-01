@@ -2,6 +2,9 @@ java.lang.Boolean类，下面是它的声明:
 ```java
 public final class Boolean implements java.io.Serializable, Comparable<Boolean>
 ```
+`Boolean`类是基本类型`boolean`的包装器类。
+
+使用`Boolean`类时可能会有[装箱拆箱操作][box]。
 
 # 1. 属性
 
@@ -68,5 +71,6 @@ public static int hashCode(boolean value) {
 指不定又跟字符串的`hashCode`撞上了,更别说其它对象的了.
 
 
+[box]: 自动装箱与拆箱.md
 [article]: https://blog.csdn.net/qq_21251983/article/details/52164403
 [hashCode]: 哈希码.md
