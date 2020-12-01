@@ -52,7 +52,7 @@ public boolean equals(Object obj) {
 
 ## 1.2 hashCode
 默认的`hashCode`方法返回对象的地址（这依赖于`JVM`的实现）。如果我们希望对象用在`HashMap`、`HashSet`之类的容器中，
-那么最好重写`hashCode`方法。哈希码的最佳实践在[ujava/lang/哈希码.md][hashCode]中给出。
+那么最好重写`hashCode`方法。哈希码的最佳实践在[java_/lang/哈希码.md][hashCode]中给出。
 
 需要注意的是，重写`equals`方法之后必须重写`hashCode`方法，原则如下：
 1. 在程序执行期间，只要equals方法的比较操作用到的信息没有被修改，那么对这同一个对象调用多次，hashCode方法必须始终如一地返回同一个整数。
@@ -302,5 +302,5 @@ R={reachable, finalizer-reachable, unreachable}。各状态含义如下：
 
 
 [hashCode]: 哈希码.md
-[Object]: ../../../test/ujava/lang/ObjectTest.java
+[Object]: ../../../test/java_/lang/ObjectTest.java
 [finalize]: ../../../res/img/object-finalize.jpg

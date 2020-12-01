@@ -1,4 +1,4 @@
-package ujava.lang;
+package java_.lang;
 
 import org.junit.jupiter.api.Test;
 

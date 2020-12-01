@@ -6,7 +6,7 @@
 
 ## 项目结构
 
-1. src 文件夹：包含对`Java`源码的解读文档和其他相关知识的文档，和`Java`源码目录保持一致，只是在最前面加上**u**以区分
+1. src 文件夹：包含对`Java`源码的解读文档和其他相关知识的文档，和`Java`源码目录保持一致，只是在后面加上<strong>"_"</strong>以区分
 2. test 文件夹：包含一些测试和验证代码
 3. res 文件夹：包含图片等资源
 
@@ -17,8 +17,8 @@
     - java.util
     - java.io
 2. 深刻理解: 这个级别要求的类，全都是一些进阶到高级所必须了解的
-    - java.nio: 需要了解非阻塞io
-    - java.lang.reflect: 反射要了解清楚的话，需要搞明白JVM的类加载机制
+    - java.nio: 需要了解非阻塞 io
+    - java.lang.reflect: 反射要了解清楚的话，需要搞明白 JVM 的类加载机制
     - java.util.concurrent: 需要了解并发、多线程的相关知识
     - java.net
     - javax.net: 网络 IO 要搞清楚的话，需要清楚 TCP/IP 和 HTTP、HTTPS

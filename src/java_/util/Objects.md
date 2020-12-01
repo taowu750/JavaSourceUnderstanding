@@ -43,7 +43,7 @@ public static int hash(Object... values) {
     return Arrays.hashCode(values);
 }
 ```
-简单地调用`Arrays.hashCode`方法，这个方法将执行[ujava/lang/哈希码.md][hashCode]一节中所述的方法计算哈希码。
+简单地调用`Arrays.hashCode`方法，这个方法将执行[java_/lang/哈希码.md][hashCode]一节中所述的方法计算哈希码。
 
 ## 1.5 toString
 ```java

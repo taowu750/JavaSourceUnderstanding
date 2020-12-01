@@ -852,7 +852,7 @@ private static class IntegerCache {
 `Integer`对象缓存池，缓存范围为`[-128, 127]`，其中最大值可以由`JVM`配置。
 
 
-[integer]: ../../../test/ujava/lang/IntegerTest.java
+[integer]: ../../../test/java_/lang/IntegerTest.java
 [box]: 自动装箱与拆箱.md
 [locality]: 程序的局部性原理.md
 [native]: annotation/Native.md
