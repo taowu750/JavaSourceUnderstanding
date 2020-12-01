@@ -30,6 +30,12 @@ public class CharsetAndEncodingTest {
 
         han = 0x6c49;
         System.out.println(han);
+
+        /*
+        输出：
+        6c49
+        汉
+         */
     }
 
     /**
@@ -39,6 +45,11 @@ public class CharsetAndEncodingTest {
     public void testPrintf() {
         int codePoint = 0x2F81A;  // 冬
         System.out.printf("Character %c is invalid\n", codePoint);
+
+        /*
+        输出：
+        Character 冬 is invalid
+         */
     }
 
     /**

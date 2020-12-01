@@ -25,5 +25,13 @@ public class OverflowAndTruncationTest {
 
         i[0] = Integer.MAX_VALUE + 2;
         print.run();
+
+        /*
+        输出：
+        2147483647 7fffffff
+        2147483646 7ffffffe
+        -2147483648 80000000
+        -2147483647 80000001
+         */
     }
 }

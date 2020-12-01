@@ -42,5 +42,11 @@ public class LocalityTest {
         }
         finish = System.currentTimeMillis();
         System.out.println("列优先访问消耗时间：" + (finish - start) + "ms");
+
+        /*
+        输出：
+        行优先访问消耗时间：61ms
+        列优先访问消耗时间：1177ms
+         */
     }
 }

@@ -26,6 +26,12 @@ public class IntegerTest {
 
         long j = 65536L * 52429L;  // 注意一定得有一个数字是 "L" long 类型，不然就是两个 int 相乘再转型成 long
         System.out.println(j + " " + Long.toHexString(j));
+
+        /*
+        输出：
+        -858980352 cccd0000 3435986944
+        3435986944 cccd0000
+         */
     }
 
     /**
@@ -48,6 +54,19 @@ public class IntegerTest {
         System.out.println(toBiStr.apply(x + MIN_VALUE) + toBiStr.apply(y + MIN_VALUE));
         System.out.println(x + MIN_VALUE + " " + (y + MIN_VALUE));
         System.out.println(compareUnsigned(x, y));
+
+        /*
+        输出：
+        1 10
+        10000000000000000000000000000001 10000000000000000000000000000001
+        -1
+        -1
+        ********************
+        11111111111111111111111111111111 11111111111111111111111111111110
+        1111111111111111111111111111111 1111111111111111111111111111110
+        2147483647 2147483646
+        1
+         */
     }
 
     /**
@@ -77,6 +96,19 @@ public class IntegerTest {
         print.accept(-14);
         print.accept(Integer.lowestOneBit(14));
         print.accept(Integer.lowestOneBit(-14));
+
+        /*
+        输出：
+                                      11
+        11111111111111111111111111111101
+                                       1
+                                       1
+
+                                    1110
+        11111111111111111111111111110010
+                                      10
+                                      10
+         */
     }
 
     @Test
@@ -93,5 +125,19 @@ public class IntegerTest {
         System.out.println();
 
         print.accept(-MIN_VALUE >>> 31);
+
+        /*
+        输出：
+                                       0
+                                       0
+                                       0
+
+        11111111111111111111111111111111
+        11111111111111111111111111111111
+        11111111111111111111111111111111
+        11111111111111111111111111111111
+
+                                       1
+         */
     }
 }
