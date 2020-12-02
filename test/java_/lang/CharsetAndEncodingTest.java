@@ -85,6 +85,7 @@ public class CharsetAndEncodingTest {
                     System.out.print((char)c + "--" + Integer.toHexString(c) + " ");
             }
         } finally {
+            //noinspection ResultOfMethodCallIgnored
             temp.delete();
         }
     }

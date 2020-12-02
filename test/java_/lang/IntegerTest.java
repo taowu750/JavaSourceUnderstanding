@@ -124,6 +124,7 @@ public class IntegerTest {
         print.accept(MIN_VALUE >> 31);
         System.out.println();
 
+        //noinspection NumericOverflow
         print.accept(-MIN_VALUE >>> 31);
 
         /*

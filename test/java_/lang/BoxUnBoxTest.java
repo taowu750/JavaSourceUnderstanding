@@ -10,6 +10,7 @@ public class BoxUnBoxTest {
     /**
      * 测试常量池和自动装箱拆箱
      */
+    @SuppressWarnings("NumberEquality")
     @Test
     public void testCache() {
         Integer i1 = 33;
@@ -29,6 +30,7 @@ public class BoxUnBoxTest {
     /**
      * 测试构造器和字面量的不同
      */
+    @SuppressWarnings({"UnnecessaryBoxing", "NewObjectEquality", "NumberEquality"})
     @Test
     public void testConstructorLiteral() {
         Integer i1 = 40;
@@ -44,6 +46,7 @@ public class BoxUnBoxTest {
     /**
      * 测试等式和表达式在装箱拆箱中的影响
      */
+    @SuppressWarnings({"NumberEquality", "ConstantConditions", "EqualsBetweenInconvertibleTypes"})
     @Test
     public void testEqualExpr() {
         Integer a = 1;
