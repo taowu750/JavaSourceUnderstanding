@@ -29,7 +29,7 @@ public static final double  MIN_NORMAL      = 2.2250738585072014E-308;
 
 ## 1.2 阶码相关
 ```java
-// 尾数部分宽度（位数）。注意，应该是 52 位，这里算上了符号位
+// 有效数字位数。尾数 52 加上隐含的最高位 1，总共 53 位
 public static final int SIGNIFICAND_WIDTH   = 53;
 
 // 最大指数（二进制）

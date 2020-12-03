@@ -157,8 +157,8 @@ public int compareTo(Double anotherDouble) {
     return Double.compare(value, anotherDouble.value);
 }
 ```
-`compare`方法保证了特殊值(`NaN`、`0`)的比较结果符合常理。但是由于它是精确比较每一位的值，
-因此对于`Double.compare(0.3, 0.1 + 0.2)`的情况将不会返回 0。
+`compare`方法和`Java`比较符号`<`、`==`、`>`的效果大致相同，只是它保证了特殊值(`NaN`、`0`)的比较结果符合常理。
+但是由于它是精确比较每一位的值，因此对于`Double.compare(0.3, 0.1 + 0.2)`的情况将不会返回 0。
 
 所以比较两个浮点数是否相等，更好的做法是指定一个误差范围，两个浮点数的差值在范围之内，则认为是相等的。
 使用`Math.abs()`计算差值，然后和阈值比较。`double`的阈值可以设为`1e-15`。
@@ -170,8 +170,6 @@ public int compareTo(Double anotherDouble) {
 关于浮点数比较可以参见这个[链接][compare]。
 
 此方法的测试代码参见[DoubleTest.java][test]。
-
-<!-- TODO: DoubleTest.testCompare 中前三个比较为什么？ -->
 
 ## 2.5 特殊值判断
 ```java
