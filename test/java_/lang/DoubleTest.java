@@ -152,21 +152,11 @@ public class DoubleTest {
     @SuppressWarnings("ConstantConditions")
     @Test
     public void testCompare() {
-        // 最大精确度到 16 位，且 16 位是部分精确
-        assertEquals(Double.compare(0.1, 0.1000_0000_0000_0001), -1);
-        assertTrue(0.1 < 0.1000_0000_0000_0001);
-        // 因为 double 精度为 1.11E-16，所以最高位之后第 16 位是部分精确
-        // 0.1000_0000_0000_0000_1 的最后一位无法被表示，0.1000_0000_0000_0000_2 的最后一位可以被近似表示
-        assertEquals(Double.compare(0.1, 0.1000_0000_0000_0000_1), 0);
-        assertEquals(0.1, 0.1000_0000_0000_0000_1);
-        assertEquals(Double.compare(0.1, 0.1000_0000_0000_0000_2), -1);
-        assertTrue(0.1 < 0.1000_0000_0000_0000_2);
-
         // 由于精度问题，0.1 被表示为 1.0000_0001_4901_1611e-1，
         // 0.2 被表示为 2.0000_0000_0000_0001e-1，0.3 被表示为 2.9999_9999_9999_9998e-1。
         // 所以会有 0.3 < 0.1 + 0.2
         assertNotEquals(0.3, 0.1 + 0.2, 0.0);
-        assertEquals(Double.compare(0.3, 0.1 + 0.2), -1);
+        assertEquals(compare(0.3, 0.1 + 0.2), -1);
 
         // 使用阈值进行比较
         double threshold = 1e-15;

@@ -20,17 +20,17 @@ public static final double MIN_NORMAL = 0x1.0p-1022; // 2.2250738585072014E-308
 // 最小正值，等于 Double.longBitsToDouble(0x1L)
 public static final double MIN_VALUE = 0x0.0000000000001P-1022; // 4.9e-324
 
-// 最大阶数（二进制）
+// 非无穷数最大阶数（二进制），等于 Math.getExponent(Double.MAX_VALUE)
 public static final int MAX_EXPONENT = 1023;
 
-/// 最小阶数（二进制）
+// 规范化数最小阶数（二进制），等于 Math.getExponent(Double.MIN_NORMAL)
 public static final int MIN_EXPONENT = -1022;
 ```
 有关规格化、阶数的相关知识在[浮点数.md][floating]中均可找到。可以看到，`double`能够表示非常大的范围，但需要注意的是，
 浮点数绝对值越大，精度也就越小。
 
 在代码中，还可以看到一个有趣的写法：0x1.fffffffffffff**P**+1023, 0x1.0**p**-1022。`P`、`p`表示 2 的幂，就如同科学计数法
-中的`e`表示 10 的幂一样。不过这种写法只能出现在 16 进制数里面，也就是`0x`开头的数。 
+中的`e`表示 10 的幂一样。不过这种写法只能表示 16 进制浮点数，也就是`0x`开头的数。 
 
 ## 1.2 特殊值
 ```java
@@ -50,6 +50,8 @@ public static final double NaN = 0.0d / 0.0;
 ```java
 public static final Class<Double>   TYPE = (Class<Double>) Class.getPrimitiveClass("double");
 ```
+`Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
+需要注意的是，`double.class`等于`Double.TYPE`，但是`double.class`不等于`Double.class`。
 
 # 2. 方法
 
@@ -57,17 +59,20 @@ public static final Class<Double>   TYPE = (Class<Double>) Class.getPrimitiveCla
 ```java
 /*
 根据 IEEE 754 双精度浮点数位布局，返回指定浮点值的表示形式。
+
 位 63（由掩码 0x8000000000000000L 选择的位）表示浮点数的符号。
 位 62-52（由掩码 0x7ff0000000000000L 选择的位）表示指数。
 位 51-0（由掩码 0x000fffffffffffffL 选择的位）表示 0x000fffffffffffffL 的有效位（有时称为尾数）。
+
 如果参数为正无穷大，则结果为 0x7ff0000000000000L。
 如果参数为负无穷大，则结果为 0xfff0000000000000L。
 如果参数为NaN，则结果为 0x7ff8000000000000L。
+
 在所有情况下，结果都是一个 long 整数，将其提供给 longBitsToDouble(long) 方法时，将产生一个与 doubleToLongBits 参数相同的浮点值
 （除了所有NaN值均折叠为单个“规范” NaN 值，即 0x7ff8000000000000L）。
  */
 public static long doubleToLongBits(double value) {
-    // 使用 doubleToRawLongBits 获取原始为表示，此表示返回的 NaN 值没有折叠为单个“规范” NaN 值
+    // 使用 doubleToRawLongBits 获取原始表示，此表示返回的 NaN 值没有折叠为单个“规范” NaN 值
     long result = doubleToRawLongBits(value);
     // 如果 result 在 NaN 的范围内（指数部分全为 1 且尾数部分非 0），将其折叠为规范 NaN 值
     if ( ((result & DoubleConsts.EXP_BIT_MASK) ==
@@ -167,7 +172,7 @@ public int compareTo(Double anotherDouble) {
 要使用参数为`String`的构造方法，不要使用构造参数为`double`的，如果非要使用`double`创建，
 一定要用`BigDecimal.valueOf`静态方法，防止丢失精度。然后调用`compareTo`方法比较即可。
 
-关于浮点数比较可以参见这个[链接][compare]。
+关于浮点数比较可以参见这个[链接][compare]，浮点数的精度测试可以参见[FloatingNumberTest][floating-test]。
 
 此方法的测试代码参见[DoubleTest.java][test]。
 
@@ -193,17 +198,17 @@ public static boolean isFinite(double d) {
 ## 2.6 toString
 ```java
 /**
- * 返回参数 d 的十进制字符串表示形式。 下面提到的所有字符都是ASCII字符。
- *  - 如果参数为 NaN，则结果为字符串“ NaN ”。
+ * 返回参数 d 的十进制字符串表示形式。 下面提到的所有字符都是 ASCII 字符。
+ *  - 如果参数为 NaN，则结果为字符串 “NaN”。
  *  - 否则，结果是一个字符串，代表参数的符号和大小（绝对值）。如果符号为负，则结果的第一个字符为 '-'; 
  *  如果符号为正，则结果中不显示符号字符。 
  *  - 对于大小 m ：
- *     - 如果 m 为无穷大，则用字符 "Infinity"; 正无穷大产生结果"Infinity"而负无穷大产生结果"-Infinity" 。
+ *     - 如果 m 为无穷大，则用字符 "Infinity"; 正无穷大产生结果 "Infinity" 而负无穷大产生结果 "-Infinity"。
  *     - 如果 m 为零，则用字符 "0.0"；负零产生结果 "-0.0" 而正零产生结果 "0.0" 。
  *     - 如果 m 大于等于 10^-3 并且小于 10^7，则将其表示为：整数部分(十进制形式，不带前导零)+'.'+小数部分。
  *     - 如果 m 小于 10^-3 或大于或等于 10^7，则以科学计数法表示：有效数字(x.xxx)+E+指数。
  * 
- * 此方法返回的字符串至少有一位小数。设 x 是参数 d生成的十进制表示，那么 d 是最接近 x 的 double 值。
+ * 此方法返回的字符串至少有一位小数。设 x 是参数 d 生成的十进制表示，那么 d 是最接近 x 的 double 值。
  */
 public static String toString(double d) {
     return FloatingDecimal.toJavaFormatString(d);
@@ -215,18 +220,18 @@ public String toString() {
     return toString(value);
 }
 ```
-`toString`的参数`d`是最接近它的字符串表示的`double`值，这其中的舍入规则参见[浮点数.md][floating]第 7 节。
+参数`d`是最接近`toString`返回值的`double`值，这其中的舍入规则参见[浮点数.md][floating]第 7 节。
 此方法的测试代码参见[DoubleTest.java][test]。
 
 ## 2.7 toHexString
 ```java
 /**
- * 返回参数 d 的 16 进制字符串表示形式。下面提到的所有字符都是ASCII字符。
- *  - 如果参数为 NaN，则结果为字符串“NaN”。
+ * 返回参数 d 的 16 进制字符串表示形式。下面提到的所有字符都是 ASCII 字符。
+ *  - 如果参数为 NaN，则结果为字符串 “NaN”。
  *  - 否则，结果是一个字符串，代表参数的符号和大小（绝对值）。如果符号为负，则结果的第一个字符为 '-'; 
  *  如果符号为正，则结果中不显示符号字符。 
  *  - 对于大小 m ：
- *     - 如果 m 为无穷大，则用字符 "Infinity"; 正无穷大产生结果"Infinity"而负无穷大产生结果"-Infinity" 。
+ *     - 如果 m 为无穷大，则用字符 "Infinity"; 正无穷大产生结果 "Infinity" 而负无穷大产生结果 "-Infinity" 。
  *     - 如果 m 为零，则有字符串 "0x0.0p0" ；负零产生结果 "-0x0.0p0" ，正零产生结果 "0x0.0p0" 。
  *     - 如果 m 是规范化数，则使用 16 进制的科学计数法表示结果。
  *     也就是 "0x1." + 尾数部分(16 进制) + "p" + 指数部分(10 进制)。其中 "p" 表示 2 的幂。尾数部分至少会有一个 0。
@@ -315,3 +320,4 @@ public static Double valueOf(double d) {
 [floating]: 浮点数.md
 [test]: ../../../test/java_/lang/DoubleTest.java
 [compare]: https://www.jianshu.com/p/4679618fd28c
+[floating-test]: ../../../test/java_/lang/FloatingNumberTest.java

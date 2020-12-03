@@ -3,6 +3,7 @@ package java_.lang;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 
 /**
@@ -201,15 +202,173 @@ public class FloatingNumberTest {
     }
 
     /**
-     * 测试{@code float}负数加法
+     * 测试浮点数十进制精度。
      */
     @Test
-    public void testFloatReduce() {
-        float i1 = 0.1f, i2 = -0.2f;
-        fP.accept(i1);
-        fP.accept(i2);
-        fP.accept(i1 + i2);
-        System.out.println(i1 + i2);
+    public void testAccuracy() {
+        // double 16 位部分精确
+        System.out.println(1. + 1e15 - 1e15);
+        System.out.println(3. + 1e15 - 1e15);
+        System.out.println(1. + 1e16 - 1e16);
+        System.out.println(3. + 1e16 - 1e16);
+        System.out.println(1.01 + 1e16 - 1e16);
+        System.out.println();
+
+        // float 8 位部分精确
+        System.out.println(1.f + 1e7f - 1e7f);
+        System.out.println(3.f + 1e7f - 1e7f);
+        System.out.println(1.4f + 1e7f - 1e7f);
+        System.out.println(1.5f + 1e7f - 1e7f);
+        System.out.println(1f + 1e8f - 1e8f);
+        System.out.println(4f + 1e8f - 1e8f);
+        System.out.println(5f + 1e8f - 1e8f);
+
+        // 需要注意的是，浮点数转字符串时会自动进行舍入，因此浮点数的字符串表示会增大误差
+
+        /*
+        输出：
+        1.0
+        3.0
+        0.0
+        4.0
+        2.0
+
+        1.0
+        3.0
+        1.0
+        2.0
+        0.0
+        0.0
+        8.0
+         */
+    }
+
+    /**
+     * 测试{@code float}的最小精度间隔。
+     */
+    @Test
+    public void testFloatEps() {
+        float bin1 = 0x1.0P-23f, bin2 = 0x1.0P-24f;
+        float dec1 = 0.0000_00059603f, dec2 = 0.0000_00059605f;
+        System.out.println(bin1);
+        System.out.println(bin2);
+        System.out.println(dec1);
+        System.out.println(dec2);
+        System.out.println();
+
+        /*
+        以上输出：
+        1.1920929E-7
+        5.9604645E-8
+        5.9603E-8
+        5.6605E-8
+         */
+
+        // 1 在二进制中只需要一位表示，因此它作为高位和最小精度间隔相加可以被 24 位有效数字（二进制）表示
+        float value = 1.f;
+        Consumer<Float> print = v -> {
+            System.out.print(Float.compare(v, v + bin1) + " ");
+            System.out.print(Float.compare(v, v + bin2) + "    ");
+            System.out.print(Float.compare(v, v + dec1) + " ");
+            System.out.println(Float.compare(v, v + dec2) + "\n");
+        };
+        print.accept(value);
+
+        // 2 在二进制中需要两位表示，因此它作为高位和最小精度间隔相加，最小精度间隔会被舍入丢弃，造成误差
+        value = 2.f;
+        print.accept(value);
+        // 1.1921E-7f 比 2^-23 次方稍大一些，可以看到它和 2 相加没有被舍入
+        System.out.println(Float.compare(value, value + 1.1921E-7f) + "\n");
+
+        // 0.1 作为高位和最小精度间隔相加可以被 24 位有效数字表示
+        value = 0.1f;
+        print.accept(value);
+
+        // 0.30005 作为高位和最小精度间隔相加可以被 24 位有效数字表示
+        value = 0.30005f;
+        print.accept(value);
+
+        /*
+        以上输出：
+        -1 0    0 -1
+
+        0 0    0 0
+
+        -1
+
+        -1 -1    -1 -1
+
+        -1 -1    -1 -1
+         */
+
+        /*
+        从结果中可以看出，两个 float 的最小精度间隔应该比 2^-24 次方稍大一点点。
+        只要 float 运算结果可以被 24 位有效数字（二进制）表示，较小的数就不会被舍入丢弃。
+         */
+    }
+
+    /**
+     * 测试{@code double}的最小精度间隔。
+     */
+    @Test
+    public void testDoubleEps() {
+        double bin1 = 0x1.0P-52, bin2 = 0x1.0P-53;
+        double dec1 = 0.0000_0000_0000_000111, dec2 = 0.0000_0000_0000_0001111;
+        System.out.println(bin1);
+        System.out.println(bin2);
+        System.out.println(dec1);
+        System.out.println(dec2);
+        System.out.println();
+
+        /*
+        以上输出：
+        2.220446049250313E-16
+        1.1102230246251565E-16
+        1.11E-16
+        1.111E-16
+         */
+
+        // 1 在二进制中只需要一位表示，因此它作为高位和最小精度间隔相加可以被 53 位有效数字（二进制）表示
+        double value = 1.;
+        DoubleConsumer print = v -> {
+            System.out.print(Double.compare(v, v + bin1) + " ");
+            System.out.print(Double.compare(v, v + bin2) + "    ");
+            System.out.print(Double.compare(v, v + dec1) + " ");
+            System.out.println(Double.compare(v, v + dec2) + "\n");
+        };
+        print.accept(value);
+
+        // 2 在二进制中需要两位表示，因此它作为高位和最小精度间隔相加，最小精度间隔会被舍入丢弃，造成误差
+        value = 2.;
+        print.accept(value);
+        // 2.221E-16 比 2^-52 次方稍大一些，可以看到它和 2 相加没有被舍入
+        System.out.println(Double.compare(2.0, 2.0 + 2.221E-16) + "\n");
+
+        // 0.1 作为高位和最小精度间隔相加可以被 53 位有效数字表示
+        value = 0.1;
+        print.accept(value);
+
+        // 0.30005 作为高位和最小精度间隔相加可以被 53 位有效数字表示
+        value = 0.30005;
+        print.accept(value);
+
+        /*
+        以上输出：
+        -1 0    0 -1
+
+        0 0    0 0
+
+        -1
+
+        -1 -1    -1 -1
+
+        -1 -1    -1 -1
+         */
+
+        /*
+        从结果中可以看出，两个 double 的最小精度间隔应该比 2^-53 次方稍大一点点。
+        只要 double 运算结果可以被 53 位有效数字（二进制）表示，较小的数就不会被舍入丢弃。
+         */
     }
 
     /**
