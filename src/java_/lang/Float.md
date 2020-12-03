@@ -280,5 +280,6 @@ public static Float valueOf(float f) {
 
 [floating]: 浮点数.md
 [double]: Double.md
+[compare]: https://www.jianshu.com/p/4679618fd28c
 [test]: ../../../test/java_/lang/FloatTest.java
 [floating-test]: ../../../test/java_/lang/FloatingNumberTest.java
