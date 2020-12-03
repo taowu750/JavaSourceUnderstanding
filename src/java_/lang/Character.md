@@ -47,6 +47,8 @@ public static final char MAX_VALUE = '\uFFFF';
 ```java
 public static final Class<Character> TYPE = (Class<Character>) Class.getPrimitiveClass("char");
 ```
+`Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
+需要注意的是，`char.class`等于`Character.TYPE`，但是`char.class`不等于`Character.class`。
 
 ## 1.4 Unicode 字符一般类别属性
 ```java

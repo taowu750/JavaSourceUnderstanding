@@ -29,6 +29,8 @@ public final class Long extends Number implements Comparable<Long>
 ```java
 public static final Class<Long>     TYPE = (Class<Long>) Class.getPrimitiveClass("long");
 ```
+`Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
+需要注意的是，`long.class`等于`Long.TYPE`，但是`long.class`不等于`Long.class`。
 
 # 2. 方法
 

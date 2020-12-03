@@ -44,6 +44,8 @@ public final class Integer extends Number implements Comparable<Integer>
 ```java
 public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 ```
+`Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
+需要注意的是，`int.class`等于`Integer.TYPE`，但是`int.class`不等于`Integer.class`。
 
 ## 1.3 查找表
 ```java
