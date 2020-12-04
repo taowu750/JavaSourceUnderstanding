@@ -7,12 +7,12 @@ public class Object
 # 1. 方法
 
 ## 1.1 equals
-在Java规范中，它对equals()方法的使用必须要遵循如下几个规则：
-1. 自反性：对于任何非空引用值 x，x.equals(x) 都应返回 true。
-2. 对称性：对于任何非空引用值 x 和 y，当且仅当y.equals(x) 返回 true 时，x.equals(y) 才应返回 true。
-3. 传递性：对于任何非空引用值 x、y 和z，如果 x.equals(y) 返回 true，并且 y.equals(z) 返回 true，那么 x.equals(z) 应返回 true。
-4. 一致性：对于任何非空引用值 x 和 y，多次调用 x.equals(y) 始终返回 true 或始终返回false，前提是对象上 equals 比较中所用的信息没有被修改
-5. 对于任何非空引用值 x，x.equals(null) 都应返回false。
+在`Java`规范中，它对`equals()`方法的使用必须要遵循如下几个规则：
+1. 自反性：对于任何非空引用值`x`，`x.equals(x)` 都应返回`true`。
+2. 对称性：对于任何非空引用值`x`和`y`，当且仅当`y.equals(x)`返回`true`时，`x.equals(y)`才应返回`true`。
+3. 传递性：对于任何非空引用值`x`、`y`和`z`，如果`x.equals(y)`返回`true`，并且`y.equals(z)`返回`true`，那么`x.equals(z)`应返回`true`。
+4. 一致性：对于任何非空引用值`x`和`y`，多次调用`x.equals(y)`始终返回`true`或始终返回`false`，前提是对象上`equals`比较中所用的信息没有被修改
+5. 对于任何非空引用值 `x`，`x.equals(null)` 都应返回`false`。
 
 `equals`方法编写建议：
 1. 判断比较的两个对象引用是否相等，如果引用相等那么表示是同一个对象，那么当然相等
@@ -55,9 +55,9 @@ public boolean equals(Object obj) {
 那么最好重写`hashCode`方法。哈希码的最佳实践在[java_/lang/哈希码.md][hashCode]中给出。
 
 需要注意的是，重写`equals`方法之后必须重写`hashCode`方法，原则如下：
-1. 在程序执行期间，只要equals方法的比较操作用到的信息没有被修改，那么对这同一个对象调用多次，hashCode方法必须始终如一地返回同一个整数。
-2. 如果两个对象根据equals方法比较是相等的，那么调用两个对象的hashCode方法必须返回相同的整数结果。
-3. 如果两个对象根据equals方法比较是不等的，则hashCode方法不一定得返回不同的整数。
+1. 在程序执行期间，只要`equals`方法的比较操作用到的信息没有被修改，那么对这同一个对象调用多次，`hashCode`方法必须始终如一地返回同一个整数。
+2. 如果两个对象根据`equals`方法比较是相等的，那么调用两个对象的`hashCode`方法必须返回相同的整数结果。
+3. 如果两个对象根据`equals`方法比较是不等的，则`hashCode`方法不一定得返回不同的整数。
 
 还需要注意，`hashCode`方法最好不要依赖对象中易变的字段。如果对象作为`HashMap`中的键，它的某个字段值一变，
 那么用这个对象就不能访问原来在`HashMap`中的值了。如果需要依赖易变字段的话，那么保证该字段可以表示对象的类型，如姓名等。
@@ -272,33 +272,33 @@ class User {
 否则，若对象未执行过`finalize`方法，将其放入`F-Queue`队列，由一低优先级线程执行该队列中对象的`finalize`方法。执行`finalize`方法完毕后，
 `GC`会再次判断该对象是否可达，若不可达，则进行回收，否则，对象“复活”。
 
-对象有两种状态，涉及到两类状态空间，一是**终结状态空间** F={unfinalized, finalizable, finalized}；二是**可达状态空间**
-R={reachable, finalizer-reachable, unreachable}。各状态含义如下：
-1. unfinalized: 新建对象会先进入此状态，`GC`并未准备执行其`finalize`方法，因为该对象是可达的
-2. finalizable: 表示`GC`可对该对象执行`finalize`方法，`GC`已检测到该对象不可达。正如前面所述，
+对象有两种状态，涉及到两类状态空间，一是**终结状态空间**`F={unfinalized, finalizable, finalized}`；二是**可达状态空间**
+`R={reachable, finalizer-reachable, unreachable}`。各状态含义如下：
+1. `unfinalized`: 新建对象会先进入此状态，`GC`并未准备执行其`finalize`方法，因为该对象是可达的
+2. `finalizable`: 表示`GC`可对该对象执行`finalize`方法，`GC`已检测到该对象不可达。正如前面所述，
 `GC`通过`F-Queue`队列和一专用线程完成`finalize`的执行
-3. finalized: 表示`GC`已经对该对象执行过`finalize`方法
-4. reachable: 表示`GC Roots`引用可达
-5. finalizer-reachable(f-reachable)：表示不是`reachable`，但可通过某个`finalizable`对象可达
-6. unreachable：对象不可通过上面两种途径可达
+3. `finalized`: 表示`GC`已经对该对象执行过`finalize`方法
+4. `reachable`: 表示`GC Roots`引用可达
+5. `finalizer-reachable(f-reachable)`：表示不是`reachable`，但可通过某个`finalizable`对象可达
+6. `unreachable`：对象不可通过上面两种途径可达
 
 ![状态变迁图][finalize]
 
 变迁说明：
-1. 新建对象首先处于\[reachable, unfinalized\]状态(A)
-2. 随着程序的运行，一些引用关系会消失，导致状态变迁，从reachable状态变迁到f-reachable(B, C, D)或unreachable(E, F)状态
-3. 若JVM检测到处于unfinalized状态的对象变成f-reachable或unreachable，`JVM`会将其标记为finalizable状态(G,H)。
-若对象原处于\[unreachable, unfinalized\]状态，则同时将其标记为f-reachable(H)。
-4. 在某个时刻，`JVM`取出某个finalizable对象，将其标记为finalized并在某个线程中执行其`finalize`方法。
-由于是在活动线程中引用了该对象，该对象将变迁到(reachable, finalized)状态(K或J)。
-该动作将影响某些其他对象从f-reachable状态重新回到reachable状态(L, M, N)
-5. 处于finalizable状态的对象不能同时是unreahable的，由第4点可知，将对象finalizable对象标记为finalized时会由某个线程执行该对象的finalize方法，
-致使其变成reachable。这也是图中只有八个状态点的原因
+1. 新建对象首先处于`[reachable, unfinalized]`状态(A)
+2. 随着程序的运行，一些引用关系会消失，导致状态变迁，从`reachable`状态变迁到`f-reachable(B, C, D)`或`unreachable(E, F)`状态
+3. 若`JVM`检测到处于`unfinalized`状态的对象变成`f-reachable`或`unreachable`，`JVM`会将其标记为`finalizable(G,H)`。
+若对象原处于`[unreachable, unfinalized]`状态，则同时将其标记为`f-reachable(H)`。
+4. 在某个时刻，`JVM`取出某个`finalizable`对象，将其标记为`finalized`并在某个线程中执行其`finalize`方法。
+由于是在活动线程中引用了该对象，该对象将变迁到`(reachable, finalized)`状态(K或J)。
+该动作将影响某些其他对象从`f-reachable`状态重新回到`reachable(L, M, N)`
+5. 处于`finalizable`状态的对象不能同时是`unreachable`的，由第4点可知，将对象`finalizable`对象标记为`finalized`时会由某个线程执行该对象的`finalize`方法，
+致使其变成`reachable`。这也是图中只有八个状态点的原因
 6. 程序员手动调用`finalize`方法并不会影响到上述内部标记的变化，因此`JVM`只会至多调用`finalize`一次，即使该对象“复活”也是如此。
 程序员手动调用多少次不影响`JVM`的行为
-7. 若`JVM`检测到finalized状态的对象变成unreachable，回收其内存(I)
+7. 若`JVM`检测到`finalized`状态的对象变成`unreachable`，回收其内存(I)
 8. 若对象并未覆盖`finalize`方法，`JVM`会进行优化，直接回收对象（O）
-9. 注：`System.runFinalizersOnExit()`等方法可以使对象即使处于reachable状态，`JVM`仍对其执行`finalize`方法
+9. 注：`System.runFinalizersOnExit()`等方法可以使对象即使处于`reachable`状态，`JVM`仍对其执行`finalize`方法
 
 
 [hashCode]: 哈希码.md

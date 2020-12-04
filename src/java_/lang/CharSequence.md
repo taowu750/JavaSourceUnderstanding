@@ -6,13 +6,14 @@ public interface CharSequence
 此接口不修改`equals`和`hashCode`方法的常规协定，因此通常未定义比较两个实现了`CharSequence`的对象的结果。
 它有几个实现类：`CharBuffer`、`String`、`StringBuffer`、`StringBuilder`。
 
-在Java8之后，`CharSequence`多了两个默认方法：`chars()`和`codePoints()`。
+在`Java8`之后，`CharSequence`多了两个默认方法：`chars()`和`codePoints()`。
 它们返回`IntStream`，分别产生字符和代码点流。
 
 # 1. 方法
 
-## chars
+## 1.1 chars
 ```java
+// 将 CharSequence 中的字符返回为 IntStream
 public default IntStream chars() {
     class CharIterator implements PrimitiveIterator.OfInt {
         int cur = 0;
@@ -48,10 +49,11 @@ public default IntStream chars() {
 ```
 可以看出，这个方法使用`StreamSupport.intStream()`和`Spliterators.spliterator()`方法创建`IntStream`。
 其中用到了一个接口[java.util.PrimitiveIterator.OfInt][PrimitiveIterator]。
+<!-- TODO: 解释 StreamSupport.intStream() 方法和 Spliterators.spliteratorUnknownSize 方法 -->
 
-# codePoints
+## 1.2 codePoints
 ```java
-// TODO: 需要深入理解代码点等相关概念
+// 将 CharSequence 中的代码点返回为 IntStream
 public default IntStream codePoints() {
     class CodePointIterator implements PrimitiveIterator.OfInt {
         int cur = 0;
@@ -63,10 +65,12 @@ public default IntStream codePoints() {
             try {
                 while (i < length) {
                     char c1 = charAt(i++);
+                    // 如果 c1 不是高代理部分
                     if (!Character.isHighSurrogate(c1) || i >= length) {
                         block.accept(c1);
                     } else {
                         char c2 = charAt(i);
+                        // 如果 c1 是高代理部分，那就将后面的低代理部分 c2 也提取出来，将它们解析为代码点
                         if (Character.isLowSurrogate(c2)) {
                             i++;
                             block.accept(Character.toCodePoint(c1, c2));
