@@ -433,7 +433,7 @@ static void toSurrogates(int codePoint, char[] dst, int index) {
 
 ## 2.7 codePoint 计数
 ```java
-// 计算 CharSequence 中代码点的数量。
+// 计算 CharSequence 中代码点的数量，范围为 [beginIndex, endIndex - 1]。文本范围内的每个不成对代理都计为一个代码点。
 public static int codePointCount(CharSequence seq, int beginIndex, int endIndex) {
     int length = seq.length();
     if (beginIndex < 0 || endIndex > length || beginIndex > endIndex) {
@@ -441,7 +441,6 @@ public static int codePointCount(CharSequence seq, int beginIndex, int endIndex)
     }
     int n = endIndex - beginIndex;
     for (int i = beginIndex; i < endIndex; ) {
-        // 和 2.6 toSurrogates 方法中一样，从后往前
         if (isHighSurrogate(seq.charAt(i++)) && i < endIndex &&
             isLowSurrogate(seq.charAt(i))) {
             n--;
@@ -451,7 +450,8 @@ public static int codePointCount(CharSequence seq, int beginIndex, int endIndex)
     return n;
 }
 
-// 计算字符数组中代码点的数量。
+// 计算字符数组中代码点的数量。offset 参数是子数组第一个 char 的索引，而 count 参数指定子数组的长度。
+// 子数组中每个不成对代理都计为一个代码点。
 public static int codePointCount(char[] a, int offset, int count) {
     if (count > a.length - offset || offset < 0 || count < 0) {
         throw new IndexOutOfBoundsException();
@@ -473,9 +473,10 @@ static int codePointCountImpl(char[] a, int offset, int count) {
 }
 ```
 
-## 2.8 索引
+## 2.8 offsetByCodePoints
 ```java
-// 返回从 index 处偏移 codePointOffset 个代码点的索引。codePointOffset 为正表示向右，为负表示向左
+// 返回从 index 处偏移 codePointOffset 个代码点的索引。codePointOffset 为正表示向右，为负表示向左。
+// 文本范围内的每个不成对代理都计为一个代码点。
 public static int offsetByCodePoints(CharSequence seq, int index, int codePointOffset) {
     int length = seq.length();
     if (index < 0 || index > length) {
@@ -486,7 +487,6 @@ public static int offsetByCodePoints(CharSequence seq, int index, int codePointO
     if (codePointOffset >= 0) {
         int i;
         for (i = 0; x < length && i < codePointOffset; i++) {
-            // 和 2.6 toSurrogates 方法中一样，从后往前
             if (isHighSurrogate(seq.charAt(x++)) && x < length &&
                 isLowSurrogate(seq.charAt(x))) {
                 x++;
@@ -512,7 +512,44 @@ public static int offsetByCodePoints(CharSequence seq, int index, int codePointO
     return x;
 }
 
-// offsetByCodePoints 对字符数组的实现类似，不再列出
+// 返回从 index 处偏移 codePointOffset 个代码点的索引。codePointOffset 为正表示向右，为负表示向左。
+// 其中 start 和 count 参数指定数组 a 的子数组。 
+public static int offsetByCodePoints(char[] a, int start, int count, int index, int codePointOffset) {
+    if (count > a.length-start || start < 0 || count < 0
+        || index < start || index > start+count) {
+        throw new IndexOutOfBoundsException();
+    }
+    return offsetByCodePointsImpl(a, start, count, index, codePointOffset);
+}
+
+static int offsetByCodePointsImpl(char[]a, int start, int count, int index, int codePointOffset) {
+    int x = index;
+    if (codePointOffset >= 0) {
+        int limit = start + count;
+        int i;
+        for (i = 0; x < limit && i < codePointOffset; i++) {
+            if (isHighSurrogate(a[x++]) && x < limit &&
+                isLowSurrogate(a[x])) {
+                x++;
+            }
+        }
+        if (i < codePointOffset) {
+            throw new IndexOutOfBoundsException();
+        }
+    } else {
+        int i;
+        for (i = codePointOffset; x > start && i < 0; i++) {
+            if (isLowSurrogate(a[--x]) && x > start &&
+                isHighSurrogate(a[x-1])) {
+                x--;
+            }
+        }
+        if (i < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+    return x;
+}
 ```
 
 ## 2.9 判断字符/代码点的一般属性类别
