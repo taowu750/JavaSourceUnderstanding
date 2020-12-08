@@ -19,7 +19,7 @@ public String trim() {
 在`avoid getfield opcode`处，我们可以看到将`String`的`value`成员字段赋值给了局部变量，为了避免`getfield`这个操作码的执行。
 `getfield`是`JVM`的操作码，它的作用是获取指定类的实例域，并将其值压入到栈顶。
 
-## 2. 例子
+# 2. 例子
 
 为了弄懂这个问题，我们需要从字节码的角度分析，下面我们来看一个例子<sup id="a1">[\[1\]](#f1)</sup>：
 ```java
@@ -53,7 +53,7 @@ public class Main {
 然后就是调用输出方法了。可以看到输出三次，`getfield`操作码就调用了三次，假想我们在遍历这个`char`数组，
 那就要频繁调用`getfield`操作码了。
 
-## 3. 避免 getfield 频繁调用
+# 3. 避免 getfield 频繁调用
 
 学习`String`中的做法，我们可以避免`getfield`的频繁调用：
 ```java
