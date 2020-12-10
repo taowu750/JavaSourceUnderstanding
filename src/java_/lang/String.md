@@ -1484,7 +1484,7 @@ public static String join(CharSequence delimiter, Iterable<? extends CharSequenc
 ## 3.24 intern
 ```java
 /*
-返回字符串对象的规范表示。也就是与该字符串具有相同内容的字符串，但保证来自唯一字符串池。
+返回字符串对象的规范表示。也就是与该字符串具有相同内容的字符串，但保证来自全局字符串常量池。
 
 调用 intern 方法时，如果池已经包含与当前 String 对象内容相同的字符串，则返回池中的字符串。
 否则，将当前 String 对象添加到池中，并返回当前 String 对象的引用。
@@ -1493,7 +1493,7 @@ public static String join(CharSequence delimiter, Iterable<? extends CharSequenc
 */
 public native String intern();
 ```
-字符串常量池的内容参见[常量池.md][const-pool]。
+全局字符串常量池的内容参见[常量池.md][const-pool]。此方法的测试参见[StringTest.java][test]。
 
 # 4. 内部类/接口/枚举
 
@@ -1550,3 +1550,4 @@ private static class CaseInsensitiveComparator implements Comparator<String>, ja
 [ascii]: http://c.biancheng.net/c/ascii/
 [read-resolve]: https://blog.csdn.net/huangbiao86/article/details/6896565
 [const-pool]: 常量池.md
+[test]: ../../../test/java_/lang/StringTest.java
