@@ -11,6 +11,8 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 请参见[字符集编码.md][charset]）。索引指的是代码单位，因此补充字符在`String`中使用两个索引。
 除了用于处理`UTF-16`代码单元（即`char`值）的方法外，`String`类还提供用于处理`Unicode`代码点（即字符）的方法。
 
+`String`是一个不可变对象，在它上所做的任何更改都会生成一个新的字符串。
+
 `String`代码中比较值得注意的有：
 1. 3.7 getBytes: 避免`getfield`频繁调用
 2. 3.9 toCharArray: `native`方法和类初始化
@@ -1491,6 +1493,7 @@ public static String join(CharSequence delimiter, Iterable<? extends CharSequenc
 */
 public native String intern();
 ```
+字符串常量池的内容参见[常量池.md][const-pool]。
 
 # 4. 内部类/接口/枚举
 
@@ -1546,3 +1549,4 @@ private static class CaseInsensitiveComparator implements Comparator<String>, ja
 [KMP]: https://www.zhihu.com/question/21923021/answer/1032665486
 [ascii]: http://c.biancheng.net/c/ascii/
 [read-resolve]: https://blog.csdn.net/huangbiao86/article/details/6896565
+[const-pool]: 常量池.md
