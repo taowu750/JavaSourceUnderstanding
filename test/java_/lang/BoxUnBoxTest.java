@@ -77,4 +77,39 @@ public class BoxUnBoxTest {
         true
          */
     }
+
+    void wrapperAndObject(int i) {
+        System.out.println("wrapperAndObject(int) 方法调用");
+    }
+
+    void wrapperAndObject(Object o) {
+        System.out.println("wrapperAndObject(Object) 方法调用");
+    }
+
+    void wrapperAndPrimitive(int i) {
+        System.out.println("wrapperAndPrimitive(int) 方法调用");
+    }
+
+    void wrapperAndPrimitive(Integer i) {
+        System.out.println("wrapperAndPrimitive(Integer) 方法调用");
+    }
+
+    /**
+     * 测试参数重载和装箱。
+     */
+    @Test
+    public void testWrapperAndObject() {
+        wrapperAndObject(3);
+        wrapperAndObject(Integer.valueOf(3));
+        wrapperAndPrimitive(3);
+        wrapperAndPrimitive(Integer.valueOf(3));
+
+        /*
+        输出：
+        wrapperAndObject(int) 方法调用
+        wrapperAndObject(Object) 方法调用
+        wrapperAndPrimitive(int) 方法调用
+        wrapperAndPrimitive(Integer) 方法调用
+         */
+    }
 }
