@@ -38,6 +38,9 @@ public class StringTest {
          */
     }
 
+    /**
+     * 测试{@link String#intern()}方法。
+     */
     @SuppressWarnings({"StringBufferReplaceableByString", "StringEquality"})
     @Test
     public void testIntern() {
@@ -53,11 +56,15 @@ public class StringTest {
         String s4 = new StringBuilder("ja").append("va").toString();
         System.out.println(s4.intern() == s4);
 
+        String s5 = new String("xyz");
+        System.out.println(s5.intern() == s5);
+
         /*
         输出：
         false
         true
         true
+        false
         false
          */
     }
