@@ -823,6 +823,7 @@ public int indexOf(int ch) {
 
 // 从指定的索引开始，返回指定子字符串首次出现在该字符串中的索引。
 // 返回的索引 k 满足：k >= fromIndex  && this.startsWith(str, k)
+// 如果 str 不存在，则返回 -1
 public int indexOf(String str, int fromIndex) {
     return indexOf(value, 0, value.length, str.value, 0, str.value.length, fromIndex);
 }
@@ -930,6 +931,7 @@ private int lastIndexOfSupplementary(int ch, int fromIndex) {
 
 // 从指定的索引开始，返回指定子字符串首次出现在该字符串中的索引。
 // 返回的索引 k 满足：k <= fromIndex && this.startsWith(str, k)
+// 如果 str 不存在，则返回 -1
 public int lastIndexOf(String str, int fromIndex) {
     return lastIndexOf(value, 0, value.length, str.value, 0, str.value.length, fromIndex);
 }
