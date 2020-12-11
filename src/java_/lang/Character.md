@@ -352,7 +352,9 @@ public static int toCodePoint(char high, char low) {
                                    - MIN_LOW_SURROGATE);
 }
 
-// 计算 CharSequence 中 index 处的代码点
+// 计算 CharSequence 中 index 处的代码点，索引范围 [0, length)。
+// 如果 index 处是低代理或 BMP 字符，直接返回这个 char；
+// 如果 index 处是高代理，看看后面是不是低代理，是的话返回解析的代码点；不是（或超出范围）返回这个高代理
 public static int codePointAt(CharSequence seq, int index) {
     char c1 = seq.charAt(index);
     // 如果 c1 是高代理部分且还有字符
@@ -390,7 +392,9 @@ static int codePointAtImpl(char[] a, int index, int limit) {
     return c1;
 }
 
-// 计算 CharSequence 中 index 前一处代码点
+// 计算 CharSequence 中 index 前一处代码点，索引范围 [1, length]。
+// 如果 index - 1 处是高代理或 BMP 字符，直接返回这个 char；
+// 如果 index - 1 处是低代理，看看 index - 2 是不是高代理，是的话返回解析的代码点；不是（或超出范围）返回这个低代理
 public static int codePointBefore(CharSequence seq, int index) {
     char c2 = seq.charAt(--index);
     if (isLowSurrogate(c2) && index > 0) {

@@ -514,7 +514,9 @@ public CharSequence subSequence(int beginIndex, int endIndex) {
 
 ## 3.6 代码点方法
 ```java
-// 返回指定索引处的 Unicode 代码点。索引范围从 0 到 length() - 1。
+// 返回指定索引处的 Unicode 代码点。索引范围 [0, length)。
+// 如果 index 处是低代理或 BMP 字符，直接返回这个 char；
+// 如果 index 处是高代理，看看后面是不是低代理，是的话返回解析的代码点；不是（或超出范围）返回这个高代理
 public int codePointAt(int index) {
     if ((index < 0) || (index >= value.length)) {
         throw new StringIndexOutOfBoundsException(index);
@@ -522,7 +524,9 @@ public int codePointAt(int index) {
     return Character.codePointAtImpl(value, index, value.length);
 }
 
-// 返回指定索引之前的 Unicode 代码点。索引范围从 1 到 length()。
+// 返回指定索引之前的 Unicode 代码点。索引范围 [1, length]。
+// 如果 index - 1 处是高代理或 BMP 字符，直接返回这个 char；
+// 如果 index - 1 处是低代理，看看 index - 2 是不是高代理，是的话返回解析的代码点；不是返回这个低代理
 public int codePointBefore(int index) {
     int i = index - 1;
     if ((i < 0) || (i >= value.length)) {
