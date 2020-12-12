@@ -127,8 +127,6 @@ private int hugeCapacity(int minCapacity) {
     return (minCapacity > MAX_ARRAY_SIZE) ? minCapacity : MAX_ARRAY_SIZE;
 }
 ```
-`AbstractStringBuilder`的扩容方法在输入正确的情况下一定会将容量扩大至原来容量的两倍及以上，
-这和我自己想的的扩容实现（只在容量不够的情况下扩容）不同。
 
 ## 3.3 CharSequence 方法
 ```java
