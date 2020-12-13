@@ -53,7 +53,7 @@ public synchronized String toString() {
 而在`StringBuilder`中没有使用`toStringCache`优化，是因为`StringBuilder`的典型应用场景是拼接字符串，返回`String`对象后，
 就不再使用。还有一个更重要的原因是：`String`必须是个不可变对象，而`StringBuilder`可能被误用在多线程中。
 如果`StringBuilder`也采用`toStringCache`加上`String`包私有构造器的话，那么就可能会出现构造的`String`不一致的情况，
-所以`StringBuilder`不能和`String`共享数组，这是不安全的方式。
+所以`StringBuilder`不能和`String`共享数组，这是不安全的方式。<sup id="a1">[\[1\]](#f1)</sup>
 
 ## 2.2 从父类继承的方法
 
@@ -115,3 +115,5 @@ private void readObject(java.io.ObjectInputStream s) throws java.io.IOException,
 
 
 [abstract-string-builder]: AbstractStringBuilder.md
+
+<b id="f1">\[1\]</b> 参考 https://stackoverflow.com/questions/46294579/why-stringbuffer-has-a-tostringcache-while-stringbuilder-not。 [↩](#a1)
