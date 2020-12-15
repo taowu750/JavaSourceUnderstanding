@@ -72,6 +72,7 @@ ThreadLocalMap getMap(Thread t) {
 }
 
 // 创建线程 t 的 ThreadLocalMap。firstValue 是初始条目的值。
+@Override
 void createMap(Thread t, T firstValue) {
     // 为线程的 inheritableThreadLocals 创建 ThreadLocalMap
     t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
