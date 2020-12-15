@@ -83,4 +83,4 @@ public static <T> T requireNonNull(T obj, String message) {
 出错。第二个重载方法可以让你指定报错信息。
 
 
-[hashCode]: ../lang/哈希码.md
+[hashCode]: ../lang/哈希算法.md

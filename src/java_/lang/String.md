@@ -1548,7 +1548,7 @@ private static class CaseInsensitiveComparator implements Comparator<String>, ja
 
 
 [charset]: 字符集编码.md
-[hashCode]: 哈希码.md
+[hashCode]: 哈希算法.md
 [char]: Character.md
 [getfield]: 避免getfield频繁调用.md
 [to-char-array]: https://stackoverflow.com/questions/49715328/why-doesnt-string-tochararray-use-arrays-copyof

@@ -2,8 +2,7 @@
 ```java
 public class ThreadLocal<T>
 ```
-`ThreadLocal`用来提供线程局部变量。这些变量与普通变量不同，每个访问一个线程（通过其`get`或`set`方法）的线程都有自己的
-独立初始化的变量副本。
+`ThreadLocal`用来提供线程局部变量。这些变量与普通变量不同，每个访问线程（通过其`get`或`set`方法）都有自己独立初始化的变量副本。
 
 `ThreadLocal`实例通常在类中是`private static`字段，用于将一个状态（例如，用户 ID 或事务 ID）与一个线程相关联。
 例如，下面的类生成每个线程本地的唯一标识符。线程的 ID 是在第一次调用`ThreadId.get()`时分配的，并且在后续调用中保持不变：
@@ -30,6 +29,10 @@ public class ThreadId {
 }
 ```
 
+之所以建议`ThreadLocal`是`static`字段，是因为如果它是一个实例字段，那么会变成“一个线程-一个 ThreadLocal 实例”，
+而不是我们通常需要的的“每个线程-一个 ThreadLocal 实例”。大多数情况下我们希望`ThreadLocal`对象是个单例，
+而不要创建多个`ThreadLocal`对象。
+
 只要线程是活动的并且`ThreadLocal`实例是可访问的，则每个线程都对其线程局部变量的副本持有隐式引用。
 线程回收后，其线程`ThreadLocal`的所有副本都将进行垃圾回收（除非存在对这些副本的其他引用）。
 如果某个`ThreadLocal`对象被回收，那么线程中与此`ThreadLocal`对应的局部变量也会被删除（这是 lazy 实现的）。
@@ -44,9 +47,9 @@ public class ThreadId {
 每个线程中的局部变量也会被回收（lazy 方式）。这使得`ThreadLocalMap`还是**GC-friendly**的。
 可以说`ThreadLocal`的精华所在就是`ThreadLocalMap`。
 
-之所以建议`ThreadLocal`是`static`字段，是因为如果它是一个实例字段，那么会变成“一个线程-一个 ThreadLocal 实例”，
-而不仅仅是我们需要的的“每个线程-一个 ThreadLocal 实例”，这通常和我们想要的效果不同。
-大多数情况下我们希望`ThreadLocal`对象是个单例，而不要创建多个`ThreadLocal`对象。
+`ThreadLocalMap`是一个基于开放地址线性探测法的散列表，之所以不使用类似于`HashMap`的拉链法+红黑树实现，我想有几点原因：
+ - 历史原因：`Java8`的时候才将`HashMap`改为拉链法+红黑树实现
+ - `HashMap`需要处理更通用的情况，而`ThreadLocalMap`只需要针对一个场景，现有的设计足以应付。
 
 # 1. 成员变量
 
@@ -69,6 +72,10 @@ private static int nextHashCode() {
     return nextHashCode.getAndAdd(HASH_INCREMENT);
 }
 ```
+`HASH_INCREMENT`的值是一个魔法数字`0x61c88647`，它的十进制值是`1640531527`，二进制是`01100001110010001000011001000111`。
+如果我们将这个二进制取反加 1，可以得到`10011110001101110111100110111001`，它是无符号十进制是`2654435769`，
+而这正是[哈希算法.md][hash] 2.2.2 节提到的黄金分割点，它能达到最佳的散列效果。而`1640531527`是`2 ^ 32 * (1 - 1/φ)`，
+这是 32 位的另一个黄金分割点。
 
 # 2. 构造器
 ```java
@@ -542,7 +549,7 @@ static ThreadLocalMap createInheritedMap(ThreadLocalMap parentMap) {
 }
 ```
 
-## 4.3 get
+## 4.4 get
 ```java
 // 返回此 ThreadLocal 的当前线程副本中的值。如果该变量没有当前线程的值，
 // 则返回调用 initialValue 方法返回的值。
@@ -581,7 +588,7 @@ private T setInitialValue() {
 }
 ```
 
-## 4.4 set
+## 4.5 set
 ```java
 public void set(T value) {
     // 获取当前线程和与它绑定的 ThreadLocalMap
@@ -595,7 +602,7 @@ public void set(T value) {
 }
 ```
 
-## 4.5 remove
+## 4.6 remove
 ```java
 // 删除当前线程和当前 ThreadLocal 绑定的局部变量。
 public void remove() {
@@ -605,7 +612,7 @@ public void remove() {
 }
 ```
 
-## 4.6 childValue
+## 4.7 childValue
 ```java
 /*
 childValue 方法在 ThreadLocal 子类 InheritableThreadLocal 中实现。在 ThreadLocal 内部定义是为了提供
@@ -618,3 +625,6 @@ T childValue(T parentValue) {
     throw new UnsupportedOperationException();
 }
 ```
+
+
+[hash]: 哈希算法.md

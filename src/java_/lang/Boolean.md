@@ -73,4 +73,4 @@ public static int hashCode(boolean value) {
 
 [box]: 自动装箱与拆箱.md
 [article]: https://blog.csdn.net/qq_21251983/article/details/52164403
-[hashCode]: 哈希码.md
+[hashCode]: 哈希算法.md

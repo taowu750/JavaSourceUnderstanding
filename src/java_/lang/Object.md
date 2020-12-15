@@ -301,6 +301,6 @@ class User {
 9. 注：`System.runFinalizersOnExit()`等方法可以使对象即使处于`reachable`状态，`JVM`仍对其执行`finalize`方法
 
 
-[hashCode]: 哈希码.md
+[hashCode]: 哈希算法.md
 [Object]: ../../../test/java_/lang/ObjectTest.java
 [finalize]: ../../../res/img/object-finalize.jpg
