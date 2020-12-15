@@ -2,6 +2,9 @@
 ```java
 public class ThreadLocal<T>
 ```
+
+> 作用
+
 `ThreadLocal`用来提供线程局部变量。这些变量与普通变量不同，每个访问线程（通过其`get`或`set`方法）都有自己独立初始化的变量副本。
 
 `ThreadLocal`实例通常在类中是`private static`字段，用于将一个状态（例如，用户 ID 或事务 ID）与一个线程相关联。
@@ -29,16 +32,34 @@ public class ThreadId {
 }
 ```
 
+通常有人会将`ThreadLocal`和`synchronized`等放在一起。其实我觉得这是比较容易使人误导的，因为两者的目的性完全不一样。
+`ThreadLocal`主要的是用于独享自己的变量，避免一些资源的争夺，从而实现了空间换时间的思想。
+而`synchronized`则主要用于临界（冲突）资源的分配，从而能够实现线程间信息同步，公共资源共享等，
+所以严格来说`synchronized`其实是能够实现`ThreadLocal`所需要的达到的效果的，只不过这样会带来资源争夺导致并发性能下降
+
+> 为什么需要是 static?
+
 之所以建议`ThreadLocal`是`static`字段，是因为如果它是一个实例字段，那么会变成“一个线程-一个 ThreadLocal 实例”，
 而不是我们通常需要的的“每个线程-一个 ThreadLocal 实例”。大多数情况下我们希望`ThreadLocal`对象是个单例，
 而不要创建多个`ThreadLocal`对象。
+
+> ThreadLocal 和 GC
 
 只要线程是活动的并且`ThreadLocal`实例是可访问的，则每个线程都对其线程局部变量的副本持有隐式引用。
 线程回收后，其线程`ThreadLocal`的所有副本都将进行垃圾回收（除非存在对这些副本的其他引用）。
 如果某个`ThreadLocal`对象被回收，那么线程中与此`ThreadLocal`对应的局部变量也会被删除（这是 lazy 实现的）。
 
-需要注意的是，`ThreadLocal`的`initialValue`不是线程安全的。如果在此初始化方法中用到了一些共享资源，
+`ThreadLocal`一般情况下不会导致内存泄漏。但因为`ThreadLocalMap`的生命周期跟`Thread`一样长，如果线程一直存活，
+比如你用的是线程池，那池子里面的线程自始至终都是活的，线程不被销毁，并且你用完后就没怎么操作过这个`ThreadLocal`，
+`key`虽然会在`gc`时被回收，`value`一直被`ThreadLocalMap`引用着，可能会造成`value`的累积，从而导致内存泄漏。
+因此，记得在一个线程中用完某个`ThreadLocal`就`remove`，可以防止线程不终止情况下的内存泄漏。
+
+> ThreadLocal 初始化方法非线程安全
+
+需要注意的是，`ThreadLocal`的`initialValue`方法不是线程安全的。如果在此初始化方法中用到了一些共享资源，
 就需要使用同步，或者线程安全的容器、原子类。
+
+> ThreadLocalMap
 
 每个`Thread`在使用`ThreadLocal`时都会创建此线程自己的`ThreadLocalMap`对象，
 它用来持有此线程访问的`ThreadLocal`和对应的局部变量。由于一个`ThreadLocalMap`只会被自己的持有线程访问，
@@ -46,6 +67,17 @@ public class ThreadId {
 `ThreadLocalMap`底层使用`WeakReference`持有`ThreadLocal`键，当`ThreadLocal`被回收时，
 每个线程中的局部变量也会被回收（lazy 方式）。这使得`ThreadLocalMap`还是**GC-friendly**的。
 可以说`ThreadLocal`的精华所在就是`ThreadLocalMap`。
+
+`ThreadLocalMap`之所以设计为`ThreadLocal`的嵌套类，是因为：
+ - `ThreadLocalMap`会被绑定到线程并存储给定线程的所有`ThreadLocal`键值对。因此，将其绑定到具体的`ThreadLocal`实例是没有意义的。
+ - 使`ThreadLocalMap`成为`Thread`类的内部类似乎更合乎逻辑。但是`ThreadLocalMap`不需要`Thread`对象来操作，
+ 因为这会增加一些不必要的开销。它位于`ThreadLocal`类内的原因是`ThreadLocal`负责`ThreadLocalMap`的创建。
+ 仅当在当前线程中设置第一个`ThreadLocal`时，才为当前线程创建`ThreadLocalMap`。在那之后，
+ 将相同的`ThreadLocalMap`用于所有其他`ThreadLocal`变量。
+ - `ThreadLocalMap`所有的方法都是`private`的。也就意味着除了`ThreadLocal`这个类，
+ 其他类是不能操作`ThreadLocalMap`中的任何方法的，这样就可以对其他类是透明的。同时这个类的权限是包级别的，
+ 也就意味着只有同一个包下面的类才能引用`ThreadLocalMap`这个类，这也是`Thread`为什么可以引用`ThreadLocalMap`的原因。
+ 这样的设计在使用的时候就显得简单，然后封装性又特别好。
 
 `ThreadLocalMap`是一个基于开放地址线性探测法的散列表，之所以不使用类似于`HashMap`的拉链法+红黑树实现，我想有几点原因：
  - 历史原因：`Java8`的时候才将`HashMap`改为拉链法+红黑树实现
@@ -331,9 +363,7 @@ private void resize() {
 private void rehash() {
     expungeStaleEntries();
 
-    // Use lower threshold for doubling to avoid hysteresis
-    // 当清除过时元素之后，size 大于等于 0.75 * threshold，就执行 resize
-    // 在实现中，是先插入新元素，然后 rehash 的，所以需要使用更低的阈值进行判断，防止操作滞后
+    // 当清除过时元素之后，size 大于等于 0.75 * threshold，就执行 resize，避免滞后
     if (size >= threshold - threshold / 4)
         resize();
 }
@@ -454,9 +484,6 @@ private void replaceStaleEntry(ThreadLocal<?> key, Object value, int staleSlot) 
             return;
         }
 
-        // If we didn't find stale entry on backward scan, the
-        // first stale entry seen while scanning for key is the
-        // first still present in the run.
         // 如果 staleSlot 之前没有过时条目，那么在扫描 key 时看到的第一个过时条目就是 run 中第一个条目。
         if (k == null && slotToExpunge == staleSlot)
             slotToExpunge = i;
