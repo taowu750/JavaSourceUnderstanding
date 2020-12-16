@@ -36,10 +36,10 @@ public static void main(String[] args) {
 
 # 3. JDK7 及其之后的资源关闭方式
 
-## 3.1 try-with-resource 语法
+## 3.1 try-with-resources 语法
 
-在`JDK7`以前，`Java`没有自动关闭外部资源的语法特性，直到`JDK7`中新增了`try-with-resource`语法，才实现了这一功能。
-那什么是`try-with-resource`呢？简而言之，当一个外部资源的句柄对象（比如`FileInputStream`对象）实现了`AutoCloseable`接口，
+在`JDK7`以前，`Java`没有自动关闭外部资源的语法特性，直到`JDK7`中新增了`try-with-resources`语法，才实现了这一功能。
+那什么是`try-with-resources`呢？简而言之，当一个外部资源的句柄对象（比如`FileInputStream`对象）实现了`AutoCloseable`接口，
 那么就可以将上面的板式代码简化为如下形式：
 ```java
 public static void main(String[] args) {
@@ -55,7 +55,7 @@ public static void main(String[] args) {
 
 ## 3.2 实现原理
 
-`try-with-resource`并不是`JVM`虚拟机的新增功能，只是`JDK`实现了一个语法糖，当你将上面代码反编译后会发现，
+`try-with-resources`并不是`JVM`虚拟机的新增功能，只是`JDK`实现了一个语法糖，当你将上面代码反编译后会发现，
 其实对`JVM`虚拟机而言，它看到的依然是之前的写法：
 ```java
 public static void main(String[] args) {
@@ -94,14 +94,14 @@ public static void main(String[] args) {
 ```java
 var2.addSuppressed(var11);
 ```
-这是`try-with-resource`语法涉及的另外一个知识点，叫做**异常抑制**。当对外部资源进行处理（例如读或写）时，如果遭遇了异常，
+这是`try-with-resources`语法涉及的另外一个知识点，叫做**异常抑制**。当对外部资源进行处理（例如读或写）时，如果遭遇了异常，
 且在随后的关闭外部资源过程中，又遭遇了异常，那么你`catch`到的将会是对外部资源进行处理时遭遇的异常，
 关闭资源时遭遇的异常将被“抑制”但不是丢弃，通过异常的`getSuppressed`方法，可以提取出被抑制的异常。
 
 # 4. 总结
 
-1. 当一个外部资源的句柄对象实现了`AutoCloseable`接口，`JDK7`中便可以利用`try-with-resource`语法更优雅的关闭资源，消除板式代码。
-2. `try-with-resource`时，如果对外部资源的处理和对外部资源的关闭均遭遇了异常，“关闭异常”将被抑制，“处理异常”将被抛出，
+1. 当一个外部资源的句柄对象实现了`AutoCloseable`接口，`JDK7`中便可以利用`try-with-resources`语法更优雅的关闭资源，消除板式代码。
+2. `try-with-resources`时，如果对外部资源的处理和对外部资源的关闭均遭遇了异常，“关闭异常”将被抑制，“处理异常”将被抛出，
 但“关闭异常”并没有丢失，而是存放在“处理异常”的被抑制的异常列表中。
 
 
