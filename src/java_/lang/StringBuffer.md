@@ -116,4 +116,4 @@ private void readObject(java.io.ObjectInputStream s) throws java.io.IOException,
 
 [abstract-string-builder]: AbstractStringBuilder.md
 
-<b id="f1">\[1\]</b> 参考 https://stackoverflow.com/questions/46294579/why-stringbuffer-has-a-tostringcache-while-stringbuilder-not。 [↩](#a1)
+<b id="f1">\[1\]</b> 参考 https://stackoverflow.com/questions/46294579/why-stringbuffer-has-a-tostringcache-while-stringbuilder-not [↩](#a1)

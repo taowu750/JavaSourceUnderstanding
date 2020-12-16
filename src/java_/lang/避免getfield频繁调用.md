@@ -99,4 +99,4 @@ public class Main {
 [multi-call]: ../../../res/img/getfield-multi-call.png
 [one-call]: ../../../res/img/getfield-one-call.png
 
-<b id="f1">\[1\]</b> 参考 https://www.cnblogs.com/think-in-java/p/6130917.html。 [↩](#a1) 
+<b id="f1">\[1\]</b> 参考 https://www.cnblogs.com/think-in-java/p/6130917.html [↩](#a1) 
