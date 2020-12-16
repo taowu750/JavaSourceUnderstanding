@@ -24,23 +24,23 @@
     - javax.net: 网络 IO 要搞清楚的话，需要清楚 TCP/IP 和 HTTP、HTTPS
     - java.util.stream: Java8 新特性流
 3. 会用即可
+    - java.lang.ref
     - java.math
     - java.util.regex
     - java.sql
     - javax.sql.*
-    - javax.transaction.*
     - java.lang.annotation
-    - java.lang.ref
+    - javax.transaction.*
+    - java.security.*
+    - javax.security.*
+    - java.rmi.*
+    - javax.rmi.*
+    - java.text
     - java.util.logging
     - java.util.prefs
     - java.util.jar
     - java.util.zip
     - javax.annotation.*
-    - java.rmi.*
-    - javax.rmi.*
-    - java.security.*
-    - javax.security.*
-    - java.text
     - javax.xml.*
     - org.w3c.dom.*
     - org.xml.sax.*
