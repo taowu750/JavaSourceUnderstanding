@@ -82,6 +82,12 @@ public class ThreadId {
 `ThreadLocalMap`是一个基于开放地址线性探测法的散列表，之所以不使用类似于`HashMap`的拉链法+红黑树实现，我想有几点原因：
  - 历史原因：`Java8`的时候才将`HashMap`改为拉链法+红黑树实现
  - `HashMap`需要处理更通用的情况，而`ThreadLocalMap`只需要针对一个场景，现有的设计足以应付。
+ 
+> 代码要点
+
+ - 1.1 `hashCode`: 乘法哈希和黄金分割点
+ - 3.1.1 `Entry`: 使用`WeakRefence`
+ - 3.1.4.2 清理: 启发式地清理
 
 # 1. 成员变量
 
@@ -456,20 +462,18 @@ private void replaceStaleEntry(ThreadLocal<?> key, Object value, int staleSlot) 
     // We clean out whole runs at a time to avoid continual
     // incremental rehashing due to garbage collector freeing
     // up refs in bunches (i.e., whenever the collector runs).
-    // 备份 staleSlot 之前的过时条目。我们需要一次性清理整个 run，以避免由于垃圾回收器以束形式释放引用
-    // 而导致的连续增量 rehash。
+    // 备份 staleSlot 之前的过时条目。我们需要清理 staleSlot 附近的过时条目，避免重复调用此方法。
     int slotToExpunge = staleSlot;
     for (int i = prevIndex(staleSlot, len); (e = tab[i]) != null; i = prevIndex(i, len))
         if (e.get() == null)
             slotToExpunge = i;
 
-    // 查找 run 中和 key 相等的键或尾随的过时条目，以先找到的为准
+    // 查找 key 相等的键或尾随的过时条目，以先找到的为准
     for (int i = nextIndex(staleSlot, len); (e = tab[i]) != null; i = nextIndex(i, len)) {
         ThreadLocal<?> k = e.get();
 
         // 如果我们找到了键，那么我们需要将它与过时的条目交换，以保持哈希表的顺序。然后，
-        // 使用 expungeStaleEntry 方法将新的过时条目或其上方遇到的任何其他过时条目删除，
-        // 或重新计算 run 中的所有其他条目。
+        // 使用 expungeStaleEntry 方法将新的过时条目或其之前遇到的任何其他过时条目删除
         if (k == key) {
             e.value = value;
 
@@ -484,7 +488,7 @@ private void replaceStaleEntry(ThreadLocal<?> key, Object value, int staleSlot) 
             return;
         }
 
-        // 如果 staleSlot 之前没有过时条目，那么在扫描 key 时看到的第一个过时条目就是 run 中第一个条目。
+        // 如果 staleSlot 之前没有过时条目，那么备份扫描 key 时看到的第一个过时条目。
         if (k == null && slotToExpunge == staleSlot)
             slotToExpunge = i;
     }
@@ -493,7 +497,7 @@ private void replaceStaleEntry(ThreadLocal<?> key, Object value, int staleSlot) 
     tab[staleSlot].value = null;
     tab[staleSlot] = new Entry(key, value);
 
-    // 如果 run 中还有其他过时条目，清除它们
+    // 如果之前发现了其他过时条目，清除它们
     if (slotToExpunge != staleSlot)
         cleanSomeSlots(expungeStaleEntry(slotToExpunge), len);
 }
