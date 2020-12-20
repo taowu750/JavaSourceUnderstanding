@@ -2,40 +2,18 @@
 ```java
 class Shutdown
 ```
-包私有工具类，包含控制虚拟机关闭序列的数据结构和逻辑。
+包私有工具类，包含控制虚拟机关闭序列的数据结构和逻辑。参见[Runtime.md][runtime] 2.1 节 addShutdownHook。
 
-`Java`虚拟机响应以下两种事件而关闭：
- - 程序退出：通常，当最后一个非守护线程退出时，或者当`Runtime.exit`或`System.exit`方法被调用
- - 响应于用户中断（例如键入<kbd>Ctrl</kbd>-<kbd>C</kbd>）或系统范围的事件（例如用户注销或系统关闭）来终止虚拟机。
- 
-关闭钩子只是一个初始化但未启动的线程。当虚拟机开始其关闭序列时，它将以未指定的顺序启动所有已注册的关闭钩子，
-并使其同时运行。当所有钩子完成后，如果启用了`runFinalizersOnExit`，则它将运行所有未调用的`finalizer`。最后，虚拟机将停止。
-请注意，如果通过调用`exit`方法启动了关闭操作，则守护程序线程将在关闭序列期间继续运行，非守护程序线程也将继续运行。
-
-一旦关闭序列开始，就只能通过调用`halt`方法来停止它，该方法将强制终止虚拟机。
-一旦关闭序列开始，就无法注册新的关闭钩子或取消注册先前注册的钩子。尝试执行任何这些操作都将引发`IllegalStateException`。
-
-关闭钩子在虚拟机的生命周期中的某个微妙时间运行，因此应进行防御性编码。特别是，应将它们编写为线程安全的，并尽可能避免死锁。
-它们也不应盲目依赖可能已经注册了自己的关闭钩子的服务，因此可能自己处于关闭过程中。尝试使用其他基于线程的服务
-（例如`AWT`事件调度线程）可能会导致死锁。
-
-关闭钩子也应迅速完成工作。当程序调用`exit`，期望虚拟机将立即关闭并退出。当虚拟机由于用户注销或系统关闭而终止时，
-底层操作系统可能只允许在固定的时间内关闭和退出。因此，不建议尝试任何用户交互或在关闭钩子中执行长时间运行的计算。
-
-通过调用线程的`ThreadGroup.uncaughtException`方法，可以像其他线程一样在关闭钩子中处理未捕获的异常。
-此方法的默认实现将异常的堆栈跟踪信息打印到`System.err`并终止线程。它不会导致虚拟机退出或停止。
-
-在极少数情况下，虚拟机可能会中止，即在不完全关闭的情况下停止运行。当虚拟机在外部终止时会发生这种情况，
-例如在`Unix`上使用`SIGKILL`信号或在`Microsoft Windows`上使用`TerminateProcess`调用。
-如果`native`方法出错（例如，破坏内部数据结构或尝试访问不存在的内存），则虚拟机也可能中止。
-如果虚拟机中止，则无法保证是否将运行任何关闭钩子。
 
 # 1. 成员字段
 
 ## 1.1 关闭状态
 ```java
+// RUNNING 状态：此时可以向关闭序列中添加钩子
 private static final int RUNNING = 0;
+// HOOKS 状态：由 RUNNING 转换而来，表示开启关闭序列
 private static final int HOOKS = 1;
+// FINALIZERS 状态：由 HOOKS 转换而来，表示关闭序列全部启动
 private static final int FINALIZERS = 2;
 
 // 关闭状态初始为 RUNNING
@@ -52,7 +30,7 @@ private static boolean runFinalizersOnExit = false;
 ## 1.3 hook
 ```java
 /*
-系统关闭钩子被注册到一个预定义的数组中。关闭钩子列表如下：
+系统关闭钩子被注册到一个预定义的数组中，关闭时将会依次运行。关闭钩子在数组中的分布如下：
 (0) Console restore hook
 (1) Application hooks
 (2) DeleteOnExit hook
@@ -94,7 +72,7 @@ registerShutdownInProgress 参数应该为 false，因为第一个文件可能�
 添加到 DeleteOnExit 列表中。
 
 @params slot  关闭钩子数组中的插槽，其元素将在关闭期间按顺序调用
-@params registerShutdownInProgress 如果为true，则即使正在关闭，也允许注册钩子。
+@params registerShutdownInProgress 如果为 true，则即使正在关闭，也允许注册钩子。
 @params hook  要注册的钩子
 
 @throw IllegalStateException 
@@ -157,14 +135,8 @@ static native void halt0(int status);
 ## 2.5 sequence
 ```java
 /*
-实际停机序列在这里定义。
-
-如果不是 runFinalizersOnExit，这将很简单——我们只需运行钩子，然后停止。
-相反，我们需要跟踪是在运行钩子还是 finalizer。在后一种情况下，finalizer 可以调用 exit(1) 以立即终止，
-而在前一种情况下，对于任何 n，调用 exit(n) 都只是暂停。
-
-请注意，如果启用了 on-exit finalizer，那么当关闭是由一个 exit(0) 启动时，它们就会运行；
-对于，它们永远不会运行在 exit(n)（n != 0）或响应 SIGINT、SIGTERM 等。
+实际停机序列在这里定义。sequence 只会在 HOOKS 状态下运行。如果已经是 FINALIZERS 状态，则不会运行第二遍。
+此方法会先依次运行注册的关闭钩子，然后如果启用了 runFinalizersOnExit，就运行所有未调用的 finalizer
 */
 private static void sequence() {
     synchronized (lock) {
@@ -176,10 +148,11 @@ private static void sequence() {
     runHooks();
     boolean rfoe;
     synchronized (lock) {
-        // 将状态变为 FINALIZERS
+        // 将状态由 HOOKS 变为 FINALIZERS，表示关闭序列运行完毕
         state = FINALIZERS;
         rfoe = runFinalizersOnExit;
     }
+    // 如果启用 runFinalizersOnExit，则运行所有未调用的 finalizer
     if (rfoe) runAllFinalizers();
 }
 
@@ -189,18 +162,20 @@ private static native void runAllFinalizers();
 
 ## 2.6 shutdown
 ```java
-// 在最后一个非守护进程线程完成时由 JNI DestroyJavaVM 过程调用。与 exit 方法不同，此方法实际上不会停止 VM。
+// 此方法在最后一个非守护进程线程完成时由 JNI DestroyJavaVM 过程调用。
+// 与 exit 方法不同，此方法实际上不会停止 VM，只会运行一遍关闭序列。
 static void shutdown() {
     synchronized (lock) {
         switch (state) {
-            case RUNNING:       /* 启动 Shutdown */
+            case RUNNING:       /* 从 RUNNING 到 HOOKS 状态，启动关闭序列 */
                 state = HOOKS;
                 break;
-            case HOOKS:         /* 停止 */
+            case HOOKS:
             case FINALIZERS:
                 break;
         }
     }
+    /* 在类对象上同步，使任何其他试图再次启动关闭的线程无限期地暂停 */
     synchronized (Shutdown.class) {
         sequence();
     }
@@ -209,41 +184,62 @@ static void shutdown() {
 
 ## 2.7 exit
 ```java
-// 由 Runtime.exit 调用，它执行所有安全检查。也由系统提供的终止事件的处理程序调用，该事件应传递非零状态代码。
+/*
+status 是状态码。按照惯例，非零状态代码表示异常终止。
+
+此方法由 Runtime.exit 调用，它会执行所有安全检查。此方法也由系统提供的终止事件的处理程序调用，该事件传递非零状态码。
+*/
 static void exit(int status) {
     boolean runMoreFinalizers = false;
     synchronized (lock) {
-        // 系统提供的终止事件的处理程序 status 非 0
         if (status != 0) runFinalizersOnExit = false;
         switch (state) {
-            case RUNNING:       /* 启动 Shutdown */
+            case RUNNING:       /* 从 RUNNING 到 HOOKS 状态，启动 Shutdown */
                 state = HOOKS;
                 break;
-            case HOOKS:         /* 停止 */
+            case HOOKS:
                 break;
             case FINALIZERS:
                 if (status != 0) {
-                    /* 非零状态下立即停止 */
+                    /* 非零状态表示异常终止，此时应该立即停止程序 */
                     halt(status);
                 } else {
-                    /* 与旧行为兼容：运行 finalizer，然后停止 */
+                    /* 与旧行为兼容：运行 finalizer，然后停止程序 */
                     runMoreFinalizers = runFinalizersOnExit;
                 }
                 break;
         }
     }
+    // 如果已经是 FINALIZERS 状态，status 为 0 且启用 runFinalizersOnExit，
+    // 则运行所有 finalizer 后停止程序
     if (runMoreFinalizers) {
         runAllFinalizers();
         halt(status);
     }
     synchronized (Shutdown.class) {
-        /* 在类对象上同步，使任何其他试图启动关闭的线程无限期地暂停 */
+        // 如果从 RUNNING 到 HOOKS 状态，或已经是 HOOKS 状态
+        /* 在类对象上同步，使任何其他试图再次启动关闭的线程无限期地暂停 */
         sequence();
         halt(status);
     }
 }
 ```
+`exit`方法运行流程如下：
+1. 首先，如果`status`非 0，`runFinalizersOnExit`会被设为`false`，不会运行任何`finalizer`。
+2. 如果当前状态是`RUNNING`，`sequence`方法此时还未被调用，则转移到`HOOKS`状态：
+    - 如果`status`非 0，先执行`sequence` 方法，运行关闭序列，不会运行任何`finalizer`，
+    状态转移至`FINALIZERS`，最后停止程序。
+    - 如果`status`为 0，先执行`sequence`方法（`sequence`方法内部根据`runFinalizersOnExit`决定是否运行所有未调用的`finalizer`），
+    状态转移至`FINALIZERS`，然后停止程序。
+3. 如果当前状态为`HOOKS`，则会被无限期阻塞。
+4. 如果当前状态是`FINALIZERS`，`sequence`方法此时已经运行过一次：
+    - 如果`status`非 0，则会立即停止程序。
+    - 如果`status`为 0，且`runFinalizersOnExit`为`true`，则会先运行所有未调用的`finalizer`，然后停止程序。
+
+总结下来，如果关闭序列未运行，则会运行一遍（也只会运行一遍）。
+而`finalizer`只会在`status`为 0 且`runFinalizersOnExit`为`true`的状态下运行，而且在关闭序列运行完一遍后仍然可以执行。
 
 
 [object]: Object.md
+[runtime]: Runtime.md
 [hook]: ApplicationShutdownHooks.md
