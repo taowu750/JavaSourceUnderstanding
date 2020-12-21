@@ -27,12 +27,12 @@
     - java.lang.ref
     - java.math
     - java.util.regex
+    - java.security.*
+    - javax.security.*
     - java.sql
     - javax.sql.*
     - java.lang.annotation
     - javax.transaction.*
-    - java.security.*
-    - javax.security.*
     - java.rmi.*
     - javax.rmi.*
     - java.text
