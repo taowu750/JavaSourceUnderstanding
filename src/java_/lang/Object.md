@@ -244,7 +244,7 @@ protected void finalize() throws Throwable { }
 （比如C语言的`malloc`系列函数）。
 
 ### 1.6.1 finalize 的问题
-1. 一些与finalize相关的方法，由于一些致命的缺陷，已经被废弃了，如`System.runFinalizersOnExit()`方法、
+1. 一些与`finalize`相关的方法，由于一些致命的缺陷，已经被废弃了，如`System.runFinalizersOnExit()`方法、
 `Runtime.runFinalizersOnExit()`方法
 2. `System.gc()`与`System.runFinalization()`方法增加了`finalize`方法执行的机会，但不可盲目依赖它们
 3. `Java`语言规范并不保证`finalize`方法会被及时地执行、而且根本不会保证它们会被执行
