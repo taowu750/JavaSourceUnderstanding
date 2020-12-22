@@ -13,7 +13,7 @@ if (security != null) {
     security.checkXXX(argument, ...);
 }
 ```
-   
+
 安全管理器会通过引发异常来阻止操作完成。如果允许该操作，则安全管理器仅返回，但是如果不允许该操作，则抛出`SecurityException`。
 该约定的唯一例外是`checkTopLevelWindow`，它返回一个`boolean`值。
 
@@ -41,7 +41,7 @@ if (sm != null)
 if (sm != null)
     sm.checkPermission(permission, context);
 ```
-   
+
 权限分为以下几类：文件，套接字，网络，安全性，运行时，属性，`AWT`，反射和序列化。
 管理这些各种权限类别的类是`java.io.FilePermission`，`java.net.SocketPermission`，`java.net.NetPermission`，
 `java.security.SecurityPermission`，`java.lang.RuntimePermission`，`java.util.PropertyPermission`，
@@ -68,6 +68,8 @@ if (sm != null)
 列出了所有需要权限的 1.2 版方法，并且针对每个方法告诉它所需的权限。
 
 有关`JDK`中对`SecurityManager`所做的更改以及有关移植 1.1 样式安全管理器的建议，请参阅[Java Security 文档][security]。
+
+有关`SecurityManager`的配置和应用场景，参见[安全管理器.md][sm]。
 
 # 1. 属性
 
@@ -931,4 +933,5 @@ public void checkSecurityAccess(String target) {
 
 [permissions]: https://docs.oracle.com/javase/8/docs/technotes/guides/security/permissions.html
 [security]: https://docs.oracle.com/javase/8/docs/technotes/guides/security/index.html
+[sm]: 安全管理器.md
 [finalize-attack]: finalize攻击.md
