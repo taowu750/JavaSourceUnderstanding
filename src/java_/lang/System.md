@@ -501,7 +501,7 @@ public static String lineSeparator() {
 ## 3.11 getenv
 ```java
 /*
-获取指定环境变量的值。环境变量是与系统有关的外部命名值。
+获取指定环境变量的值。环境变量是与系统有关的外部命名值。环境变量名忽略大小写。
 
 如果存在安全管理器，则会使用 RuntimePermission("getenv."+name) 权限来调用其 checkPermission方法。
 这可能会导致引发 SecurityException。如果没有抛出异常，则返回变量 name 的值。
@@ -517,6 +517,7 @@ public static String getenv(String name) {
 
 // 返回当前系统环境的所有环境变量，返回的 Map 不可更改。环境变量从父进程传递到子进程。
 // 如果系统不支持环境变量，则返回一个空映射。
+// 此方法返回的 Map 对大小写敏感
 public static java.util.Map<String,String> getenv() {
     SecurityManager sm = getSecurityManager();
     if (sm != null) {
@@ -526,6 +527,7 @@ public static java.util.Map<String,String> getenv() {
     return ProcessEnvironment.getenv();
 }
 ```
+关于`getenv(String)`和`getenv()`方法之间的差异，参见[ProcessEnvironment.md][pe]。
 
 ## 3.12 exit
 ```java
@@ -594,3 +596,4 @@ public static native String mapLibraryName(String libname);
 [security-manager]: SecurityManager.md
 [sm]: 安全管理器.md
 [test]: ../../../test/java_/lang/SystemTest.java
+[pe]: ProcessEnvironment.md

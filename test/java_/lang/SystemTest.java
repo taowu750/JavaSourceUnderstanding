@@ -60,4 +60,30 @@ public class SystemTest {
         null
          */
     }
+
+    /**
+     * 测试{@link System#getenv(String)}和{@link System#getenv()}的不同
+     */
+    @Test
+    public void testGetEnv() {
+        // System.getenv(String) 大小写不敏感
+        System.out.println(System.getenv("JAVA_HOME"));
+        System.out.println(System.getenv("java_home"));
+        // System.getenv() 返回的 Map 大小写敏感
+        System.out.println(System.getenv().get("JAVA_HOME"));
+        System.out.println(System.getenv().get("java_home"));
+
+        /*
+        // progra~1 就是 Program Files。它原来是在纯 DOS 下使用的。纯 DOS 使用 8+3 文件格式，
+        // 也就是说文件名最多不超过 8 个字符，扩展名最多不超过 3 个字符，长文件名就采用
+        // 第 7 个字符为 ~，第 8 个字符按有没有重复的排了。所以文件浏览器下的 C:\Program Files
+        // 文件夹进入纯 DOS 看到的是 C:\progra~1 , 这个被延续到 WINDOWS 中。
+
+        输出：
+        C:\progra~1\Java\jdk1.8.0_231
+        C:\progra~1\Java\jdk1.8.0_231
+        C:\progra~1\Java\jdk1.8.0_231
+        null
+         */
+    }
 }
