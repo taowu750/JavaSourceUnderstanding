@@ -65,6 +65,10 @@ assert p.getInputStream().read() == -1;
 ```
 如果要使用一组明确的环境变量启动进程，请先调用`Map.clear()`然后再添加环境变量。
 
+`ProcessBuilder`代码中比较值得注意的有：
+ - 2.2 Redirect: 使用`Redirect`类封装流类型和流行为类型的操作。
+ - 4.9 start: 使用安全管理器，发生异常时不要暴露底层错误细节
+
 # 1. 成员字段
 ```java
 // 命令列表

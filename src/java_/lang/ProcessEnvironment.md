@@ -4,6 +4,10 @@ final class ProcessEnvironment extends HashMap<String,String>
 ```
 `ProcessEnviroment`是线程的执行环境，也就是一组系统环境变量。
 
+`ProcessEnviroment`代码中比较值得注意的有：
+ - 2.5 NameComparator: 定制忽略大小写的字符串比较规则。
+ - 3.1 静态构造块：`Collections.unmodifiable`仍可通过更改参数容器改变此方法的返回容器内容。
+
 # 1. 成员字段
 ```java
 // 环境变量名最小长度
