@@ -115,6 +115,7 @@ public static abstract class Redirect
  - 通过调用`Redirect.from(File)`创建的从文件读取的流
  - 通过调用`Redirect.to(File)`创建的写入文件的流
  - 通过调用`Redirect.appendTo(File)`创建的追加到文件的流
+
 以上每个类别都有一个关联的唯一`Type`。
 
 ### 2.2.1 Type
