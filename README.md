@@ -68,8 +68,13 @@
 
 ## 相关链接
 
-[Oracle JDK][https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html]
+[Oracle JDK][oracle]
 
-[Java SE Specifications][https://docs.oracle.com/javase/specs/]
+[Java SE Specifications][spec]
 
-[Java SE 8 Documentation][https://docs.oracle.com/javase/8/docs/]
+[Java SE 8 Documentation][doc]
+
+
+[oracle]: https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html
+[spec]: https://docs.oracle.com/javase/specs/
+[doc]: https://docs.oracle.com/javase/8/docs/
