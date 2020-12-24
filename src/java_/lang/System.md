@@ -501,10 +501,18 @@ public static String lineSeparator() {
 ## 3.11 getenv
 ```java
 /*
-获取指定环境变量的值。环境变量是与系统有关的外部命名值。环境变量名忽略大小写。
+获取指定环境变量的值。环境变量是与系统有关的外部命名值。
 
-如果存在安全管理器，则会使用 RuntimePermission("getenv."+name) 权限来调用其 checkPermission方法。
+如果存在安全管理器，则会使用 RuntimePermission("getenv."+name) 权限来调用其 checkPermission 方法。
 这可能会导致引发 SecurityException。如果没有抛出异常，则返回变量 name 的值。
+
+系统属性和环境变量在概念上都是名称和值之间的映射。两种机制都可用于将用户定义的信息传递给 Java 进程。
+环境变量具有更广泛的影响，因为它们对定义它们的进程的所有后代都是可见的，而不仅仅是直接 Java 子进程可见。
+它们在不同的操作系统上可以具有微妙的语义，例如不区分大小写。由于这些原因，环境变量更有可能产生意想不到的副作用。
+最好在可能的情况下使用系统属性。当需要全局效果或外部系统接口需要环境变量（例如 PATH）时，应使用环境变量。
+
+在 UNIX 系统上，name 的字母大小写通常很重要，而在 Microsoft Windows 系统上，name 的字母大小写通常不重要。
+例如，在 Microsoft Windows 上，表达式 System.getenv("FOO").equals(System.getenv("foo")) 可能为 true。
 */
 public static String getenv(String name) {
     SecurityManager sm = getSecurityManager();
