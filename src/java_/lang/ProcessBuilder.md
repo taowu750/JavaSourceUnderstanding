@@ -69,6 +69,8 @@ assert p.getInputStream().read() == -1;
  - 2.2 Redirect: 使用`Redirect`类封装流类型和流行为类型的操作。
  - 4.9 start: 使用安全管理器，发生异常时不要暴露底层错误细节
 
+此类的测试参见 [ProcessTest.java][test]。
+
 # 1. 成员字段
 ```java
 // 命令列表
@@ -122,7 +124,7 @@ public static abstract class Redirect
 ```java
 public enum Type {
     PIPE,  // 管道
-    INHERIT,  // 继承自父进程
+    INHERIT,  // 继承自父进程（大多数情况下等同于管道）
     READ,  // 从文件读
     WRITE,  // 写入文件
     APPEND  // 追加到文件

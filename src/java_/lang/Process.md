@@ -19,6 +19,8 @@ public abstract class Process
 
 有关进程的概念和与线程的关系，参见[进程和线程.md][pt]。
 
+此类的测试参见 [ProcessTest.java][test]。
+
 # 1. 方法
 
 ## 1.1 getInputStream
@@ -142,3 +144,4 @@ public Process destroyForcibly() {
 
 
 [pt]: 进程和线程.md
+[test]: ../../../test/java_/lang/ProcessTest.java
