@@ -1,0 +1,8 @@
+JavaSourceUnderstanding.iml
+LICENSE
+META-INF
+README.md
+out
+res
+src
+test
