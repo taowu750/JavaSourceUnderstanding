@@ -9,9 +9,29 @@ public interface CharSequence
 在`Java8`之后，`CharSequence`多了两个默认方法：`chars()`和`codePoints()`。
 它们返回`IntStream`，分别产生字符和代码点流。
 
+代理、代码点的相关概念参见 [字符集编码.md][unicode]。
+
 # 1. 方法
 
-## 1.1 chars
+## 1.1 抽象方法
+```java
+// 返回此字符序列的长度。长度是序列中 char 的数量，因此对于包含了非 BMP 字符的字符序列，
+// 此方法返回的长度将大于实际字符数量。
+int length();
+
+// 返回指定索引处的 char 值。索引的范围为 [0, length())。
+// 如果 index 处是增补字符，将返回它的高代理或低代理部分。 
+char charAt(int index);
+
+// 返回一个 CharSequence 它是此序列的子序列。该子序列范围为 [start, end)。返回序列的长度（以char单位）为 end-start，
+// 因此，如果start == end，则返回一个空序列。
+CharSequence subSequence(int start, int end);
+
+// 返回一个包含此序列中字符的字符串，该字符串的顺序与此序列相同。 字符串的长度将是此序列的长度。
+public String toString();
+```
+
+## 1.2 chars
 ```java
 // 将 CharSequence 中的字符返回为 IntStream
 public default IntStream chars() {
@@ -51,7 +71,7 @@ public default IntStream chars() {
 其中用到了一个接口[java.util.PrimitiveIterator.OfInt][PrimitiveIterator]。
 <!-- TODO: 解释 StreamSupport.intStream() 方法和 Spliterators.spliteratorUnknownSize 方法 -->
 
-## 1.2 codePoints
+## 1.3 codePoints
 ```java
 // 将 CharSequence 中的代码点返回为 IntStream
 public default IntStream codePoints() {
@@ -115,4 +135,6 @@ public default IntStream codePoints() {
 }
 ```
 
+
+[unicode]: 字符集编码.md
 [PrimitiveIterator]: ../util/PrimitiveIterator.md
