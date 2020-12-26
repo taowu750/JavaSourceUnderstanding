@@ -57,7 +57,7 @@
 | :sparkles: | 增量更新 | `:sparkles:` |
 | :recycle: | 重构 | `:recycle:` |
 | :pencil2: | 校对，主要指更正错别字、调整源码分组、修改源码排版等 | `:pencil2:` |
-| :memo: | 有多种更新，但不像重构那样大范围的修改 | `:memo:` |
+| :memo: | 其他更新 | `:memo:` |
 
 ## 不止源码
 
