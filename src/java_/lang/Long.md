@@ -32,6 +32,9 @@ public static final Class<Long>     TYPE = (Class<Long>) Class.getPrimitiveClass
 `Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
 需要注意的是，`long.class`等于`Long.TYPE`，但是`long.class`不等于`Long.class`。
 
+有 9 个预定义的类对象来表示 8 个基本类型和`void`。它们是由`Java`虚拟机创建的，与它们所表示的原始类型具有相同的名称，
+即`boolean`、`byte`、`char`、`short`、`int`、`long`、`float`和`double`。这些预定义基本类型的类对象主要是为了实现反射系统的完整性。
+
 # 2. 方法
 
 ## 2.1 无符号运算

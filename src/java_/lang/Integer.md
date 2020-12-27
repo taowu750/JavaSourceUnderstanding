@@ -47,6 +47,9 @@ public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveCl
 `Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
 需要注意的是，`int.class`等于`Integer.TYPE`，但是`int.class`不等于`Integer.class`。
 
+有 9 个预定义的类对象来表示 8 个基本类型和`void`。它们是由`Java`虚拟机创建的，与它们所表示的原始类型具有相同的名称，
+即`boolean`、`byte`、`char`、`short`、`int`、`long`、`float`和`double`。这些预定义基本类型的类对象主要是为了实现反射系统的完整性。
+
 ## 1.3 查找表
 ```java
 // 在字符串中表示数字的字符

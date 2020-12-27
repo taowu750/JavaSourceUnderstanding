@@ -23,6 +23,11 @@ public static final short   MAX_VALUE = 32767
 ```java
 public static final Class<Short>    TYPE = (Class<Short>) Class.getPrimitiveClass("short");
 ```
+`Class.getPrimitiveClass()`方法是一个`native`方法，专门用来获取基本类型的`Class`对象。
+需要注意的是，`short.class`等于`Short.TYPE`，但是`short.class`不等于`Short.class`。
+
+有 9 个预定义的类对象来表示 8 个基本类型和`void`。它们是由`Java`虚拟机创建的，与它们所表示的原始类型具有相同的名称，
+即`boolean`、`byte`、`char`、`short`、`int`、`long`、`float`和`double`。这些预定义基本类型的类对象主要是为了实现反射系统的完整性。
 
 # 2. 方法
 
