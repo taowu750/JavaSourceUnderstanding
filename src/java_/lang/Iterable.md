@@ -28,11 +28,12 @@ default void forEach(Consumer<? super T> action) {
 ## 1.3 spliterator
 ```java
 // 在此 Iterable 上创建一个 Spliterator。
-// Spliterator 是可拆分迭代器，也用于遍历数据源中的元素，但它是为了并行执行而设计的。
 default Spliterator<T> spliterator() {
     return Spliterators.spliteratorUnknownSize(iterator(), 0);
 }
 ```
+参见 [Spliterator.md][spliterator]。
 
 
 [iterator]: ../util/Iterator.md
+[spliterator]: ../util/Spliterator.md
