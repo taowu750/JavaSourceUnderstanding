@@ -11,7 +11,7 @@ public interface PrimitiveIterator<T, T_CONS> extends Iterator<T>
 ```java
 void forEachRemaining(T_CONS action)
 ```
-方法在剩余的元素上应用`T_CONS`
+在剩余的元素上应用`T_CONS`
 
 # 2. 内部类/接口
 
@@ -36,8 +36,7 @@ public static interface OfInt extends PrimitiveIterator<Integer, IntConsumer> {
 
     @Override
     default void forEachRemaining(Consumer<? super Integer> action) {
-        // 由于 Java8 的 lambda 特性，编译器能正确处理包装器类和其对应基本类型的参数。
-        // TODO: 经过测试下面的方法将始终为 false，深入理解还需要了解 java.util.Spliterators
+        // 如果 action 还实现了 IntConsumer 接口，则使用基本类型的 forEachRemaining
         if (action instanceof IntConsumer) {
             forEachRemaining((IntConsumer) action);
         }
