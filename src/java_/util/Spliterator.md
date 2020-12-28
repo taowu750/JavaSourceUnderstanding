@@ -11,8 +11,8 @@ public interface Spliterator<T>
 `Spliterator`是用于遍历和划分源元素的对象。`Spliterator`元素的来源可以是数组，`Collection`，`IO`通道或生成器函数。
 
 `Spliterator`可以单独遍历元素（`tryAdvance()`）或批量遍历元素（`forEachRemaining()`）。
-分离器还可以将其中的某些元素（使用`trySplit`）划分为另一个分离器，以用于可能的并行操作。对于使用`Spliterator`无法拆分，
-或以高度不平衡或效率低下的方式拆分的操作，将很难从并行性中受益。通过遍历和拆分剩余元素，每个`Spliterator`将用在单个批量计算。
+`Spliterator`还可以将其中的某些元素（使用`trySplit`）划分为另一个`Spliterator`，以用于可能的并行操作。对于使用`Spliterator`无法拆分，
+或以高度不平衡或效率低下的方式拆分的操作，将很难从并行性中受益。通过遍历和拆分剩余元素，每个`Spliterator`将用与单个批量的计算。
 
 `Spliterator`通过`characteristics()`声明它的结构、源和元素的特征。这些特征的取值为：
  - `ORDERED`：元素具有一定的顺序
@@ -26,7 +26,7 @@ public interface Spliterator<T>
 
 `Spliterator`报告的特征可能不止一个。这些特征可能被`Spliterator`客户端用来控制，专门化或简化计算。
 例如，一个`Collection Spliterator`将声明`SIZED`；一个`Set Spliterator`将声明`DISTINCT`，
-而`SortedSet Spliterator`还会将报告`SORTED`。特征为简单的`int`二进制位。
+而`SortedSet Spliterator`还会声明`SORTED`。特征为简单的`int`二进制位。
 一些特征还限制了方法的行为。例如，如果为`ORDERED`，则`iterator`方法必须符合其记录的顺序。
 
 将来可能会定义新的特性，因此实现者不应为未列出的值分配含义。
@@ -50,7 +50,7 @@ public interface Spliterator<T>
 使用`Spliterator`的并行算法的实现应确保`Spliterator`一次只能由一个线程使用。这很容易通过分治递归实现。
 
 调用`trySplit()`线程可以将返回的`Spliterator`移交给另一个线程，该线程又可以遍历或进一步拆分该`Spliterator`。
-如果两个或多个线程在同一个拆分器上同时运行，则拆分和遍历的行为是不确定的。如果原始线程将`Spliterator`移交给另一个线程进行处理，
+如果两个或多个线程在同一个`Spliterator`上同时运行，则拆分和遍历的行为是不确定的。如果原始线程将`Spliterator`移交给另一个线程进行处理，
 则最好在`tryAdvance()`使用任何元素之前进行该移交，因为某些保证（例如声明`SIZED`特征的`Spliterator`的`estimateSize()`的准确性）
 仅在遍历开始之前有效。
 
@@ -62,7 +62,7 @@ public interface Spliterator<T>
 > 用法
 
 像`Iterator`一样，`Spliterator`用于遍历元素。通过支持分解和单元素迭代，`Spliterator API`旨在支持并行遍历。此外，
-通过使用`Spliterator`旨在使访问元素的平均开销比`Iterator`小，并且避免`hasNext()`和`next()`单独方法所涉及的固有竞争。
+通过使用`Spliterator`旨在使访问元素的平均开销比`Iterator`小，并且避免`hasNext()`和`next()`方法所涉及的固有竞争。
 
 对于可变源，如果在`Spliterator`绑定到其数据源时到遍历结束之间，源的结构发生改变（添加，替换或删除），
 则可能会未定义的行为。可以通过以下方式来管理源的结构改变：
@@ -70,13 +70,13 @@ public interface Spliterator<T>
  从此类源上创建的`Spliterator`将具有`IMMUTABLE`特征。
  - 源能够管理并发修改。例如，`java.util.concurrent.ConcurrentHashMap`的键集是并发源。
  从此源创建的`Spliterator`具有`CONCURRENT`的特征。
- - 可变源提供了后期绑定和`fail-fast`的`Spliterator`。后期绑定可能影响计算的时间窗口；
- 故障快速检测会尽最大努力检测到遍历开始之后发生的结构改变并抛出`ConcurrentModificationException`。例如，
+ - 可变源提供了后期绑定和`fail-fast`的`Spliterator`。后期绑定可能减小计算的时间窗口；
+ `fail-fast`会尽最大努力检测到遍历开始之后发生的结构改变并抛出`ConcurrentModificationException`。例如，
  `ArrayList`和`JDK`中的许多其他非并行`Collection`类提供了后期绑定和`fail-fast`的`Spliterator`。
  - 可变源提供了非后期绑定但`fail-fast`的`Spliterator`。由于潜在结构改变的时间窗口较大，
  因此源增加了引发`ConcurrentModificationException`的可能性。
  - 可变源提供了后期绑定和非`fail-fast`的`Spliterator`。遍历开始后，由于未检测到结构改变，此源可能会具有不确定的行为。
- - 可变源提供了非后期绑定和非`fail-fast`的`Spliterator`。由于在构造之后可能会发生未检测到的结构，
+ - 可变源提供了非后期绑定和非`fail-fast`的`Spliterator`。由于在构造之后可能会发生未检测到的结构改变，
  此源有较大发生不确定行为的风险。
 
 下面是一个示例，它维护一个数组，其中实际数据保存在偶数位置，标记数据保存在奇数位置。它的`Spliterator`将忽略标记数据：
@@ -148,9 +148,9 @@ public interface Spliterator<T>
  }
 ````
 使用上面的类，我们看看诸如`java.util.stream`包之类的并行计算框架将如何使用`Spliterator`，
-这是一种实现关联的并行`forEach`的方法，该方法说明了将子任务拆分为主要任务的惯用法。如果估计的工作量很小，可以按顺序执行。
+这是一种实现关联的并行`forEach`的方法，该方法说明了将主要任务拆分为子任务的惯用法。如果估计工作量很小，可以顺序执行。
 在这里，我们假设子任务的处理顺序无关紧要；不同（分叉）的任务可能会进一步以不确定的顺序同时拆分和处理元素。
-本示例使用`java.util.concurrent.CountedCompleter`，类似的用法适用于其他并行任务构造。
+本示例使用`java.util.concurrent.CountedCompleter`，类似的用法适用于其他并行任务：
 ```java
  static <T> void parEach(TaggedArray<T> a, Consumer<T> action) {
    Spliterator<T> s = a.spliterator();
@@ -198,16 +198,16 @@ public interface Spliterator<T>
 特征值：表示元素出现顺序。如果具有此特征值，则此 Spliterator 保证 trySplit 方法将分割元素源的开始部分，
 tryAdvance 和 forEachRemaining 将按元素出现顺序执行操作。
 
-如果 Collection.iterator() 声明了一个顺序，则此 Collection 有一个元素出现顺序。
-如果是这样，则元素出现顺序与声明的顺序相同。否则，Collection 没有元素出现顺序。
+如果 Collection.iterator() 声明了一个顺序，则此 Collection 定义了元素出现顺序。
+如果是这样，则元素出现顺序与声明的顺序相同。否则，Collection 未定义元素出现顺序。
 
-对于任何 List 出现顺序均保证为升序索引顺序。但是，对于基于哈希的集合（例如 HashSet）无法保证任何顺序。
+对于任何 List 的出现顺序均保证为升序索引顺序。但是，对于基于哈希的集合（例如 HashSet）无法保证任何顺序。
 声明 ORDERED 的 Spliterator 的调用者应在非交换并行计算中保留顺序约束。
 */
 public static final int ORDERED    = 0x00000010;
 
 /*
-表示对于每对遇到的元素(x, y)，有 !x.equals(y)。
+特征值：表示对于每对遇到的元素(x, y)，有 !x.equals(y)。
 例如基于 Set 的 Spliterator。
 */
 public static final int DISTINCT   = 0x00000001;
@@ -246,7 +246,7 @@ public static final int IMMUTABLE  = 0x00000400;
 特征值：表示元素源可以由多个线程安全地并行修改（允许添加，替换和/或删除）而无需外部同步。
 如果是这样，则它的 Spliterator 具有关于遍历期间修改影响的策略。
 
-顶级 Spliterator 不应同时声明 CONCURRENT 和 SIZED，因为如果在遍历期间同时修改源，则有限大小（如果已知）可能会更改。
+顶级 Spliterator 不应同时声明 CONCURRENT 和 SIZED，因为如果在遍历期间同时修改源，则大小可能会更改。
 这样的 Spliterator 是不一致的，并且不能保证使用该 Spliterator 进行的任何计算。如果已知子 Spliterator 的大小，
 并且遍历时未出现元素源的添加或删除，则子 Spliterator 可能会声明 SIZED。
 
@@ -261,7 +261,7 @@ public static final int CONCURRENT = 0x00001000;
 声明了 SUBSIZED 而没有声明 SIZED 的 Spliterator 是不一致的，并且不能保证使用该 Spliterator 进行的任何计算。
 
 一些 Spliterator（例如，近似平衡的二叉树的顶级 Spliterator）将声明 SIZED 而不声明 SUBSIZED，
-因为通常知道整个树的大小而不直到子树的确切大小。
+因为通常知道整个树的大小而不知道子树的确切大小。
 */
 public static final int SUBSIZED = 0x00004000;
 ```
@@ -270,8 +270,8 @@ public static final int SUBSIZED = 0x00004000;
 
 ## 2.1 遍历元素
 ```java
-// 如果存在剩余元素，则对它执行给定的操作，返回true；否则返回false。如果此 Spliterator 为 ORDERED，
-// 则按遇到顺序对下一个元素执行操作。该操作引发的异常将传递给调用方。
+// 如果存在剩余元素，则对它执行给定的操作，返回 true；否则返回 false。如果此 Spliterator 为 ORDERED，
+// 则按出现顺序对下一个元素执行操作。该操作引发的异常将传递给调用方。
 boolean tryAdvance(Consumer<? super T> action);
 
 /*
@@ -288,7 +288,7 @@ default void forEachRemaining(Consumer<? super T> action) {
 /*
 如果该 Spliterator 可以分割，则返回一个子 Spliterator。从此方法返回后，此 Spliterator 将不包含切分出去的元素。
 
-如果此 Spliterator 为 ORDERED，则返回的 Spliterator 必须包含元素的前缀。
+如果此 Spliterator 为 ORDERED，则返回的 Spliterator 必须包含元素源的一组前缀元素。
 
 除非此 Spliterator 包含无限数量的元素，否则对 trySplit() 重复调用最终将返回 null。
 返回非 null：分割前报告的 estimateSize() 的值，必须大于或等于分割后两个 Spliterator 的 estimateSize()；
@@ -330,9 +330,10 @@ CONCURRENT，SUBSIZED 的或运算值。
 
 在 trySplit 调用之前或之间重复调用给定的 Spliterator 上的 characteristics()，应始终返回相同的结果。
 
-如果 Spliterator 返回了一组不一致的特征（从单个调用返回的特征或跨多个调用返回的特征），则不能保证使用此拆分器进行的任何计算。
+如果 Spliterator 返回了一组不一致的特征（从单个调用返回的特征或跨多个调用返回的特征），
+则不能保证使用此 Spliterator 进行的任何计算。
 
-拆分前给定 Spliterator 的特征可能与拆分后的征性不同。有关特定示例，请参见 SIZED，SUBSIZED 和 CONCURRENT。
+拆分前给定 Spliterator 的特征可能与拆分后的特征不同。有关特定示例，请参见 SIZED，SUBSIZED 和 CONCURRENT。
 */
 int characteristics();
 
@@ -430,6 +431,7 @@ public interface OfInt extends OfPrimitive<Integer, IntConsumer, OfInt> {
     }
 }
 ```
+`Tripwire`参见 [Tripwire.md][tripwire]。
 
 ## 3.3 OfLong
 ```java
