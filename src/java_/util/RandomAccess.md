@@ -14,7 +14,7 @@ public interface RandomAccess {
 for (int i=0, n=list.size(); i < n; i++)
     list.get(i);
 ```
-比使用迭代器循环运行地更快
+比使用迭代器循环运行地更快（一般情况下随机存取列表的迭代器的`next`方法会调用`get(int)`方法）
 ```java
 for (Iterator i=list.iterator(); i.hasNext(); )
     i.next();
