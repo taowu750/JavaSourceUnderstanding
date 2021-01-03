@@ -53,6 +53,7 @@ public String toString() {
     sb.append('[');
     for (;;) {
         E e = it.next();
+        // 防止包含自身导致无限递归
         sb.append(e == this ? "(this Collection)" : e);
         if (! it.hasNext())
             return sb.append(']').toString();
@@ -129,8 +130,8 @@ private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
         int cap = r.length;
         if (i == cap) {
             // 新的大小 ≈ 旧的大小 * 3 / 2
+            // overflow-conscious code
             int newCap = cap + (cap >> 1) + 1;
-            // newCap 可能会溢出
             if (newCap - MAX_ARRAY_SIZE > 0)
                 newCap = hugeCapacity(cap + 1);
             r = Arrays.copyOf(r, newCap);
@@ -147,6 +148,7 @@ private static int hugeCapacity(int minCapacity) {
     return (minCapacity > MAX_ARRAY_SIZE) ? Integer.MAX_VALUE : MAX_ARRAY_SIZE;
 }
 ```
+有关`overflow-conscious code`的说明参见 [overflow-conscious code.md][overflow]。
 
 ## 3.5 contains
 ```java
@@ -258,3 +260,4 @@ public void clear() {
 
 
 [collection]: Collection.md
+[overflow]: overflow-conscious%20code.md
