@@ -127,6 +127,7 @@ private int hugeCapacity(int minCapacity) {
     return (minCapacity > MAX_ARRAY_SIZE) ? minCapacity : MAX_ARRAY_SIZE;
 }
 ```
+参见 [overflow-conscious code.md][overflow]。
 
 ## 3.3 CharSequence 方法
 ```java
@@ -709,3 +710,4 @@ private void reverseAllValidSurrogatePairs() {
 
 [char]: Character.md
 [string]: String.md
+[overflow]: ../util/overflow-conscious%20code.md
