@@ -8,7 +8,7 @@
 在上面的环中，沿着顺时针的方向数字增加，逆时针的方向数字减少。可以看到，上溢过程和下溢过程发生在最大正数和最小负数之间，
 补码表示的数看起来很像是圆环。
 
-# 2. overflow conscious code
+# 2. overflow-conscious code
 
 在`Java`很多数组扩容的代码中（比如`AbstractStringBuilder`、`ArrayList`、`ByteArrayOutputStream`等），
 会有很多考虑了溢出而编写的代码，这些代码前会有注释：**"overflow-conscious code"**，说明下面这段代码是考虑了溢出的情况的。
@@ -61,7 +61,7 @@ private static int hugeCapacity(int minCapacity) {
 代码需要在`minCapacity`或`newCapacity`溢出时要么抛出异常，要么尽可能给出正确容量。
 
 在接下来的分析中，另`o = oldCapacity`、`n = newCapacity`、`m = minCapacity`、`M = MAX_ARRAY_SIZE`、
-`IM = Integer.MAX_VALUE`，简化我们的分析。
+`IMX = Integer.MAX_VALUE`、`IMN = Integer.MIN_VALUE`，简化我们的分析。
 
 ## 2.1 若 minCapacity 是正数
 
@@ -69,34 +69,40 @@ private static int hugeCapacity(int minCapacity) {
 
 下面来分析此时`grow`方法内的调用情况：
 1. 如果`n`未溢出。`n - m < 0`时，`n`被赋值为`m`，否则保持原值。也就是选择`n`、`m`中的较大值
-    - 如果`n - M > 0`，`hugeCapacity(m)`返回`M`或`IM`（都大于等于`m`），数组扩容为这么大。
-    因为`m`是我们期望的数组容量，因此即时扩容大小小于`n`也没关系。这也保证了数组大小最大的两个值为`M`或`IM`，
+    - 如果`n - M > 0`，`hugeCapacity(m)`返回`M`或`IMX`（都大于等于`m`），数组扩容为这么大。
+    因为`m`是我们期望的数组容量，因此即使扩容大小小于`n`也没关系。这也保证了数组大小最大的两个值为`M`或`IMX`，
     不会有它们的中间值。
     - 如果`n - M <= 0`，数组扩容为`n`。
-2. 如果`n`溢出了，意味着`o > IM * 2 / 3`。而`m > o`，那么`n - m`一定会下溢变成正数（可以画个环看一下）。
-因此`n`保持原值，`n - M`也一定会大于 0，`hugeCapacity(m)`将会返回`M`或`IM`，使得数组正确扩容。
+2. 如果`n`溢出了，意味着`o > IMX * 2 / 3`。而`m > o`，那么`n - m`一定会下溢变成正数（可以画个环看一下）。
+因此`n`保持原值。`n - M`也一定会大于 0，`hugeCapacity(m)`将会返回`M`或`IMX`，使得数组正确扩容。
 
 可以看出，`overflow conscious code`代码保证了`minCapacity`为正数时的正确扩容行为。
 
 ## 2.2 如果 minCapacity 是负数（溢出）
 
-如果`m`因为溢出变成负数，那么只有当`m > IM + o`时，`grow`方法才会被调用。要搞懂这一点，看看下面的图例：
+如果`m`因为溢出变成负数，那么只有当`m < IMN + o`时，`grow`方法才会被调用。要搞懂这一点，看看下面的图例：
 
 ![oldCapacity][min-cap]
 
 `o`一定是个正数（因为它是数组大小），所以`m - o`相当于在环上逆时针旋转`o`，只有当`m`处于阴影部分时，`m - o`相减才会大于 0。
-并且由图可知`-m > abs(IM) - o`。
+并且由图可知`-m > abs(IMN) - o`。
 
 下面来分析此时`grow`方法内的调用情况：
-1. 如果`n`未溢出，此时`o <= IM * 2 / 3`。有`-m > abs(IM) - o > abs(IM) - n`，所以此时`n + (-m)`一定会因为溢出小于 0。
-于是`n`被赋值为`m`。因为`m > IM + o`，所以`m - M`一定会发生下溢从而变成正数，`hugeCapacity(m)`将会抛出`OutOfMemory`异常。
-2. 如果`n`溢出，此时`o > IM * 2 / 3`，有`n < IM + o / 2`
-    - 如果`n - m < 0`，`n`被赋值为`m`。若`m - M > 0`，`hugeCapacity(m)`将会抛出`OutOfMemory`异常；
+1. 如果`n`未溢出，此时`o <= IMX * 2 / 3`。有`-m > abs(IMN) - o > abs(IMN) - n`，所以此时`n + (-m)`一定会因为溢出小于 0。
+于是`n`被赋值为`m`。因为`m < IMN + o`，所以`m - M`一定会发生下溢从而变成正数，`hugeCapacity(m)`将会抛出`OutOfMemory`异常。
+2. 如果`n`溢出，此时`o > IMX * 2 / 3`，有`n < IMN + o / 2`
+    - 如果`n - m < 0`（当`o`接近于`IMX`时，就会这样），`n`被赋值为`m`。若`m - M > 0`，`hugeCapacity(m)`将会抛出`OutOfMemory`异常；
     否则`Arrays.copyOf`将会抛出`NegativeArraySizeException`异常。
     - 如果`n - m >= 0`，`n`保持原值，而`n - M`一定会因为下溢而变成正数，`hugeCapacity(m)`将会抛出`OutOfMemory`异常。
     
 可以看出，`overflow conscious code`代码保证了`minCapacity`为负数时一定会抛出异常。
 
+总结下来，`overflow conscious code`保证了一般情况下扩容操作正常进行，
+而在`minCapacity`溢出或`newCapacity`溢出时又能够正常扩容或者抛出异常；同时代码很短，保证了高效率。就是很不直观，难以理解。
+
+详细测试代码参见 [OverflowConsciousCodeTest.java][test]。
+
 
 [circle]: ../../../res/img/complement-overflow-circle.png
 [min-cap]: ../../../res/img/complement-overflow-min-cap.png
+[test]: ../../../test/java_/util/OverflowConsciousCodeTest.java
