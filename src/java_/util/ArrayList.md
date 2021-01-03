@@ -567,7 +567,7 @@ public E set(int index, E element) {
 }
 ```
 
-## 3.15 retailAll
+## 3.15 retainAll
 ```java
 public boolean retainAll(Collection<?> c) {
     Objects.requireNonNull(c);
