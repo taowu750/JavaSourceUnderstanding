@@ -47,9 +47,19 @@ private static final int INSERTION_SORT_THRESHOLD = 47;
 // 如果要排序的 byte 数组长度大于这个值，使用计数排序替代插入排序
 private static final int COUNTING_SORT_THRESHOLD_FOR_BYTE = 29;
 
-// 如果要排序的 short、char 数组长度大于这个值，使用计数排序替代快速排序
+// 如果要排序的 short、char 数组长度大于这个值，使用基数排序（又叫计数排序、桶排序）替代快速排序
 private static final int COUNTING_SORT_THRESHOLD_FOR_SHORT_OR_CHAR = 3200;
+
+// 不同 short 值的数量
+private static final int NUM_SHORT_VALUES = 1 << 16;
+
+// 不同 char 值的数量
+private static final int NUM_CHAR_VALUES = 1 << 16;
+
+// 不同 byte 值的数量
+private static final int NUM_BYTE_VALUES = 1 << 8;
 ```
+`long`数组的归并排序和`int`数组相同，不再列出。
 
 # 2. 方法
 
@@ -531,6 +541,178 @@ private static void sort(int[] a, int left, int right, boolean leftmost) {
     }
 }
 ```
+`long`数组的快速排序和`int`数组相同，不再列出。
+
+## 2.3 char 数组基数排序
+```java
+static void sort(char[] a, int left, int right,
+                 char[] work, int workBase, int workLen) {
+    // 当 char 数组长度大于等于 COUNTING_SORT_THRESHOLD_FOR_SHORT_OR_CHAR，使用基数排序代替快速排序
+    if (right - left > COUNTING_SORT_THRESHOLD_FOR_SHORT_OR_CHAR /* 3200 */ ) {
+        // 构造基数桶，长度等于所有 char 值的数量
+        int[] count = new int[NUM_CHAR_VALUES /* 1 << 16 */ ];
+
+        // 计算 char 数组中不同字符的数量
+        for (int i = left - 1; ++i <= right;
+            count[a[i]]++
+        );
+        // 从右往左进行排序
+        for (int i = NUM_CHAR_VALUES, k = right + 1; k > left; ) {
+            // 跳过计数为 0 的桶
+            while (count[--i] == 0);
+            char value = (char) i;
+            int s = count[i];
+
+            // 将计数不为 0 的 char 值写入适当位置
+            do {
+                a[--k] = value;
+            } while (--s > 0);
+        }
+    } else {
+        // 在小数组上使用 Dual-Pivot 快排
+        doSort(a, left, right, work, workBase, workLen);
+    }
+}
+
+// 此方法和 int 数组归并排序流程一样，不再列出
+private static void doSort(char[] a, int left, int right,
+                           char[] work, int workBase, int workLen)
+
+// 此方法和 int 数组 Dual-Pivot 快排流程一样，不再列出
+private static void sort(char[] a, int left, int right, boolean leftmost)
+```
+`short`数组的排序和`char`数组相同，不再列出。
+
+## 3.4 byte 数组排序
+```java
+static void sort(byte[] a, int left, int right) {
+    // 当 byte 数组长度大于等于 COUNTING_SORT_THRESHOLD_FOR_BYTE，使用基数排序代替快速排序
+    if (right - left > COUNTING_SORT_THRESHOLD_FOR_BYTE /* 29 */ ) {
+        int[] count = new int[NUM_BYTE_VALUES /* 1 << 8 */ ];
+
+        for (int i = left - 1; ++i <= right;
+            count[a[i] - Byte.MIN_VALUE]++
+        );
+        for (int i = NUM_BYTE_VALUES, k = right + 1; k > left; ) {
+            while (count[--i] == 0);
+            // java 的 byte 是有符号数，所以需要加上 Byte.MIN_VALUE
+            byte value = (byte) (i + Byte.MIN_VALUE);
+            int s = count[i];
+
+            do {
+                a[--k] = value;
+            } while (--s > 0);
+        }
+    } else {
+        // 在小数组上使用插入排序。因为此时数组最大长度只有 28，因此不需要快排
+        for (int i = left, j = i; i < right; j = ++i) {
+            byte ai = a[i + 1];
+            while (ai < a[j]) {
+                a[j + 1] = a[j];
+                if (j-- == left) {
+                    break;
+                }
+            }
+            a[j + 1] = ai;
+        }
+    }
+}
+```
+
+## 3.5 float 数组排序
+```java
+static void sort(float[] a, int left, int right,
+                 float[] work, int workBase, int workLen) {
+    /*
+     * 第一阶段: 将 NaN 移动到数组的末尾
+     */
+    // 找出不是 NaN 的数字数量
+    while (left <= right && Float.isNaN(a[right])) {
+        --right;
+    }
+    for (int k = right; --k >= left; ) {
+        float ak = a[k];
+        // NaN 是唯一不等于自身的数
+        if (ak != ak) { // a[k] is NaN
+            // 将 NaN 移动到数组末尾
+            a[k] = a[right];
+            a[right] = ak;
+            --right;
+        }
+    }
+
+    /*
+     * 第二阶段: 对除 NaN 以外的所有内容进行排序.
+     */
+    doSort(a, left, right, work, workBase, workLen);
+
+    /*
+     * 第三阶段: 将 -0 排在 +0 前面
+     */
+    int hi = right;
+
+    /*
+     * 查找第一个零，或第一个正数，或最后一个负数
+     */
+    while (left < hi) {
+        int middle = (left + hi) >>> 1;
+        float middleValue = a[middle];
+
+        if (middleValue < 0.0f) {
+            left = middle + 1;
+        } else {
+            hi = middle;
+        }
+    }
+
+    /*
+     * 跳过最后一个负值（如果有）或所有前导负零。
+     */
+    while (left <= right && Float.floatToRawIntBits(a[left]) < 0) {
+        ++left;
+    }
+
+    /*
+     * 将负零移到子范围的开头
+     *
+     * 切分:
+     *
+     * +----------------------------------------------------+
+     * |   < 0.0   |   -0.0   |   0.0   |   ?  ( >= 0.0 )   |
+     * +----------------------------------------------------+
+     *              ^          ^         ^
+     *              |          |         |
+     *             left        p         k
+     *
+     * 排序的元素满足下列不等式:
+     *
+     *   all in (*,  left)  <  0.0
+     *   all in [left,  p) == -0.0
+     *   all in [p,     k) ==  0.0
+     *   all in [k, right] >=  0.0
+     *
+     * k 是 ?-部分 的第一个元素下标
+     */
+    for (int k = left, p = left - 1; ++k <= right; ) {
+        float ak = a[k];
+        if (ak != 0.0f) {
+            break;
+        }
+        if (Float.floatToRawIntBits(ak) < 0) { // ak is -0.0f
+            a[k] = 0.0f;
+            a[++p] = -0.0f;
+        }
+    }
+}
+
+// 此方法和 int 数组归并排序流程一样，不再列出
+private static void doSort(float[] a, int left, int right,
+                           float[] work, int workBase, int workLen)
+
+// 此方法和 int 数组 Dual-Pivot 快排流程一样，不再列出
+private static void sort(float[] a, int left, int right, boolean leftmost)
+```
+`double`数组的排序和`float`数组相同，不再列出。
 
 
 [dual-pivot-qs]: ../../../test/java_/util/DualPivotQuickSortSimpleImpl.java
