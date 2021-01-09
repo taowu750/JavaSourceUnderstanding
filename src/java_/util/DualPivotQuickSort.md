@@ -32,7 +32,7 @@ final class DualPivotQuicksort
 
 # 1. 成员字段
 ```java
-// 归并排序中允许的最多 "run" 数量。"run" 是一段升序或降序序列
+// 归并排序中允许的最多游程数量。游程是一段升序或降序序列
 private static final int MAX_RUN_COUNT = 67;
 
 // 归并排序中允许的相等序列最大长度
@@ -86,9 +86,9 @@ static void sort(int[] a, int left, int right, int[] work, int workBase, int wor
     }
 
     /*
-     * run[i] 是第 i 个 "run" 的开始下标（"run" 是一段连续的升序或降序序列）
+     * run[i] 是第 i 个游程的开始下标（游程是一段连续的升序或降序序列）
      */
-    // 注意 run 数组长度为 MAX_RUN_COUNT + 1
+    // 注意游程数组长度为 MAX_RUN_COUNT + 1
     int[] run = new int[MAX_RUN_COUNT /* 67 */ + 1];
     int count = 0; run[0] = left;
 
@@ -116,7 +116,7 @@ static void sort(int[] a, int left, int right, int[] work, int workBase, int wor
         }
 
         /*
-         * 如果 "run" 个数达到 MAX_RUN_COUNT 个，表示数组不是结构化的，切换到快速排序。
+         * 如果游程个数达到 MAX_RUN_COUNT 个，表示数组不是结构化的，切换到快速排序。
          */
         if (++count == MAX_RUN_COUNT) {
             sort(a, left, right, true);
@@ -124,14 +124,14 @@ static void sort(int[] a, int left, int right, int[] work, int workBase, int wor
         }
     }
     // 处理完成，总共会有 count + 1 个序列。除了下面第一个 if 中的特殊情况，
-    // 其他情况下最后一个 "run" 开始下标 run[count] = right + 1，包含 0 个元素。
+    // 其他情况下最后一个游程开始下标 run[count] = right + 1，包含 0 个元素。
     // run[count] 是一个哨兵值，为了简化归并时的判断。除了它，实际的序列个数是 count 个。
 
     // 检查特殊情况
     // 注意：变量 right 此时已经加 1
     if (run[count] == right++) { 
-        // 如果最后一个 "run" 只包含一个元素。增加一个 "run"，这个最后的 "run" 包含 0 个元素。
-        // 增加这个 0 元素的 "run" 是为了和一般情况保持一致。
+        // 如果最后一个游程只包含一个元素。增加一个游程，这个最后的游程包含 0 个元素。
+        // 增加这个 0 元素的游程是为了和一般情况保持一致。
         run[++count] = right;
     } else if (count == 1) { // 如果数组已经有序，直接返回
         return;
@@ -173,9 +173,9 @@ static void sort(int[] a, int left, int right, int[] work, int workBase, int wor
 
     // 自底向上的归并
     for (int last; count > 1; count = last) {
-        // 每次选择两个 "run"（"run" 之前已经处理过了，都是升序序列），进行归并
+        // 每次选择两个游程（游程之前已经处理过了，都是升序序列），进行归并
         for (int k = (last = 0) + 2; k <= count; k += 2) {
-            // 找到序列的最右边位置（第二个 "run" 的结束位置或哨兵值，不包括）和中间位置（第二个 "run" 的开始位置，包括）
+            // 找到两个序列的最右边位置（第二个游程的结束位置或哨兵值，不包括）和中间位置（第二个游程的开始位置，包括）
             // 哨兵值，也就是 right
             int hi = run[k], mi = run[k - 1];
             // 将 a 归并到 b
@@ -204,6 +204,11 @@ static void sort(int[] a, int left, int right, int[] work, int workBase, int wor
     }
 }
 ```
+整个实现中的思路是，首先检查数组的长度，比一个阈值小的时候直接使用`Dual-Pivot`快排。其它情况下，先检查数组中数据的顺序连续性。
+把数组中连续升序或者连续降序的信息记录下来，顺便把连续降序的部分倒置。这样数据就被切割成一段段连续升序的数列。
+
+如果顺序连续性好，直接使用`TimSort`算法。`TimSort`算法的核心在于利用数列中的原始顺序，所以可以提高很多效率。
+这里的`TimSort`算法是 [TimSort.md][tim-sort] 的精简版，剪掉了动态阈值的那一部分。
 
 ## 2.2 int 数组 Dual-Pivot 快排
 ```java
@@ -717,3 +722,4 @@ private static void sort(float[] a, int left, int right, boolean leftmost)
 
 [dual-pivot-qs]: ../../../test/java_/util/DualPivotQuickSortSimpleImpl.java
 [why-fast]: https://arxiv.org/pdf/1511.01138.pdf
+[tim-sort]: TimSort.md
