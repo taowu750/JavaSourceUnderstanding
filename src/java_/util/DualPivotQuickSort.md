@@ -30,6 +30,9 @@ final class DualPivotQuicksort
 
 有关`Dual-Pivot`快排的思想论述参见 [Why Is Dual-Pivot Quicksort Fast?][why-fast] 这篇论文。
 
+`DualPivotQuicksort`用来排序基本类型元素，它对扫描次数进行了优化，因为基本类型元素的比较开销较小；
+`TimSort`用来排序对象数组，它对比较次数进行了优化，因为对象的比较开销较大。参见 [TimSort.md][tim-sort]。
+
 # 1. 成员字段
 ```java
 // 归并排序中允许的最多游程数量。游程是一段升序或降序序列

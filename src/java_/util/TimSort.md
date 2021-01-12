@@ -143,6 +143,13 @@ q, r = divmod(N, minrun)
 但是，每当`gallop`循环不起作用时，`min_gallop`就会增加，这使得转换回`gallop`模式变得更加困难。
 对于随机数据，`min_gallop`增长足够大，我们几乎永远不会进入`galloping`。
 
+## 0.3 和 DualPivotSort 的比较
+
+`DualPivotQuicksort`用来排序基本类型元素，它对扫描次数进行了优化，因为基本类型元素的比较开销较小；
+`TimSort`用来排序对象数组，它对比较次数进行了优化，因为对象的比较开销较大。
+
+参见 [DualPivotQuickSort.md][dual-pivot]。
+
 # 1. 成员字段
 
 ## 1.1 常量
@@ -901,4 +908,6 @@ static <T> void sort(T[] a, int lo, int hi, Comparator<? super T> c,
      4. 合并游程所使用的额外空间也是随着游程长度而增长的，最多增长到所排序数组的一半大小。
 3. 排序的最后，将游程堆栈中所有剩余的游程合并，完成排序。
 
+
+[dual-pivot]: DualPivotQuickSort.md
 [getfield]: ../lang/避免getfield频繁调用.md
