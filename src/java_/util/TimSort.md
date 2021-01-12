@@ -275,7 +275,17 @@ private TimSort(T[] a, Comparator<? super T> c, T[] work, int workBase, int work
 private T[] ensureCapacity(int minCapacity) {
     // 只在容量小于 minCapacity 的时候扩容
     if (tmpLen < minCapacity) {
-        // 计算大于 minCapacity 的最小 2 的幂
+        // 这里是计算最小的大于minCapacity的2的幂。方法不常见，这里分析一下。
+        //
+        // 假设有无符号整型 k,它的字节码如下：
+        // 00000000 10000000 00000000 00000000  k
+        // 00000000 11000000 00000000 00000000  k |= k >> 1;
+        // 00000000 11110000 00000000 00000000  k |= k >> 2;
+        // 00000000 11111111 00000000 00000000  k |= k >> 4;
+        // 00000000 11111111 11111111 00000000  k |= k >> 8;
+        // 00000000 11111111 11111111 11111111  k |= k >> 16
+        // 上面的移位事实上只跟最高位有关系，移位的结果是最高位往后的bit全部变成了1
+        // 最后 k++ 的结果 就是刚好是比 minCapacity 大的2的幂
         int newSize = minCapacity;
         newSize |= newSize >> 1;
         newSize |= newSize >> 2;
