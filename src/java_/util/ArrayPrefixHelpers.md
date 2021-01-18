@@ -318,5 +318,10 @@ static final class CumulateTask<T> extends CountedCompleter<Void> {
 }
 ```
 
+## 2.2 其他
+
+`IntCumulateTask`、`LongCumulateTask`、`DoubleCumulateTask`类的算法流程和`CumulateTask`一模一样，
+在此不再列出。
+
 
 [scan-linear]: http://www.cs.cmu.edu/~scandal/alg/scan.html
