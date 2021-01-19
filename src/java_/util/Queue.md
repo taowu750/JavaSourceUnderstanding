@@ -15,7 +15,7 @@ public interface Queue<E> extends Collection<E>
 | --------- | ---------- | ----- |
 | 插入 | `add(e)` | `offer(e)` |
 | 删除 | `remove()` | `poll()` |
-| 价差 | `element()` | `peek()` |
+| 检查 | `element()` | `peek()` |
 
 队列通常但不一定是以`FIFO`（先进先出）的方式对元素进行排序。
 例外情况包括优先级队列（根据提供的比较器对元素进行排序或元素的自然排序）和`LIFO`（后进先出）队列（或称为堆栈）。
