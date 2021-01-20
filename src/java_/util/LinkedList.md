@@ -25,8 +25,8 @@ List list = Collections.synchronizedList(new LinkedList(...));
 不可能做出任何严格的保证。快速失败的迭代器会尽最大努力抛出`ConcurrentModificationException`。
 因此，编写依赖于此异常的程序的正确性是错误的：迭代器的快速失败行为应仅用于检测错误。
 
-此类双端队列方法说明参见 [Deque.md][deque]。一些方法的实现存在于 [AbstractCollection.md][abstract-collection] 和
-[AbstractList.md][abstract-list] 中。
+此类双端队列方法说明参见 [Deque.md][deque]。一些方法的实现存在于 [AbstractCollection.md][abstract-collection]、
+[AbstractList.md][abstract-list] 和 [AbstractSequentialList.md][abstract-sequential-list] 中。
 
 # 1. 成员字段
 ```java
@@ -895,6 +895,7 @@ private void readObject(java.io.ObjectInputStream s)
 [deque]: Deque.md
 [abstract-collection]: AbstractCollection.md
 [abstract-list]: AbstractList.md
+[abstract-sequential-list]: AbstractSequentialList.md
 [list-iterator]: ListIterator.md
 [spliterator]: Spliterator.md
 [array-list]: ArrayList.md
