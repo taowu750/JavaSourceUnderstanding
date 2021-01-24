@@ -74,6 +74,13 @@ public int hashCode() {
     return h;
 }
 ```
+可以看到，`AbstractMap`的`hashCode`计算仅仅只是相加元素的`hashCode`。
+而`AbstractList`和`Arrays`对`hashCode`的计算还会将每个元素的`hashCode`乘以一个质数`31`。
+之所以有这样的差别，有如下原因：
+
+`List`和数组，可能存在元素相同而顺序不相同的多个序列。而`List`和数组的相等性规定这些序列不应该相等，
+因此它们的`hashCode`也应该尽量不相等。采用乘以质数的方式可以符合这个要求。而`Map`则不关心元素的顺序，
+或者有着固定的顺序（如`TreeMap`），只要元素都相等，则两个`Map`相等。
 
 ## 2.3 toString
 ```java
