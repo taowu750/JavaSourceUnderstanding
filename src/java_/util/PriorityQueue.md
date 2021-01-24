@@ -27,6 +27,10 @@ public class PriorityQueue<E> extends AbstractQueue<E>
 其他一些实现参见 [AbstractCollection.md][abstract-collection] 和
 [AbstractQueue.md][abstract-queue]。 
 
+`PriorityQueue`代码中值得注意的有：
+ - 2.2 提供其他容器进行构造：`initElementsFromCollection`方法
+ - 4.1 Itr：保存因为删除操作移到已遍历区域的元素
+
 # 1. 成员字段
 ```java
 // 默认初始化容量
@@ -125,9 +129,15 @@ public PriorityQueue(SortedSet<? extends E> c) {
 // 使用 c.toArray 作为堆数组，不进行堆数组构建操作
 private void initElementsFromCollection(Collection<? extends E> c) {
     Object[] a = c.toArray();
+    // ArrayList.toArray 方法返回的是底层数组的拷贝，是一个 Object 数组。
+    // 而其他 Collection.toArray() 返回的不一定是是个 Object 数组，
+    // 所以需要再次拷贝为 Object 数组
     if (c.getClass() != ArrayList.class)
         a = Arrays.copyOf(a, a.length, Object[].class);
     int len = a.length;
+    // 如果有比较器，那么将很有可能不会调用 heapify() 方法构建堆，这样的话就必须保证没有 null 元素。
+    // 如果没有比较器，且存在 null 元素，在 heapify() 方法中就会抛出异常，因此无需检查，节省时间。
+    // 只有一个元素的话，那么直接就检查一下。
     if (len == 1 || this.comparator != null)
         for (int i = 0; i < len; i++)
             if (a[i] == null)
@@ -228,6 +238,24 @@ private void siftDownComparable(int k, E x) {
         k = child;
     }
     queue[k] = key;
+}
+
+@SuppressWarnings("unchecked")
+private void siftDownUsingComparator(int k, E x) {
+    int half = size >>> 1;
+    while (k < half) {
+        int child = (k << 1) + 1;
+        Object c = queue[child];
+        int right = child + 1;
+        if (right < size &&
+            comparator.compare((E) c, (E) queue[right]) > 0)
+            c = queue[child = right];
+        if (comparator.compare(x, (E) c) <= 0)
+            break;
+        queue[k] = c;
+        k = child;
+    }
+    queue[k] = x;
 }
 ```
 
