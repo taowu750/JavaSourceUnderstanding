@@ -12,7 +12,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 （`HashMap`类与`Hashtable`大致等效，不同之处在于它是不同步的，并且允许`null`。）
 此类不保证键值对的顺序。特别是，它不能保证顺序会随着时间的推移保持恒定。
 
-假设哈希函数将元素均匀地分散在存储桶中，则此实现为基本操作（`get`和`put`）提供常数时间的性能。
+假设哈希函数将元素均匀地分散在存储桶（哈希表中的一个槽）中，则此实现为基本操作（`get`和`put`）提供常数时间的性能。
 集合视图上的迭代所需的时间与`HashMap`实例的“容量”（存储桶数）及其大小（键值对数）成正比。
 因此，如果迭代性能很重要，则不要将初始容量设置得过高（或负载因数过低），这一点非常重要。
 
@@ -50,16 +50,14 @@ Map m = Collections.synchronizedMap(new HashMap(...));
 ## 0.2 实现要点
 
 `HashMap`是一个散列表，包含很多存储桶，通常情况下每个存储桶使用`Node`结点构造链表结构。
-但是当链表太长时（长度大于`TREEIFY_THRESHOLD`），它们会被转换成红黑树桶，结构类似于`java.util.TreeMap`。
-大多数方法尝试使用普通的链表，但在适当的的情况下会转换到`TreeNode`方法（使用`instanceof`检查节点）。
-`TreeNode`桶可以像链表桶一样被遍历和使用，在具有大量元素的情况下支持更快的查找。然而，
-由于在正常使用中的绝大多数桶的元素不会太多，因此在方法中检查`TreeNode`的操作可能会被延迟。
+但是当链表太长时（长度大于`TREEIFY_THRESHOLD`），它们会被转换成红黑树，结构类似于`java.util.TreeMap`。
+大多数方法使用`instanceof`检查节点，以确定是使用普通的链表，还是使用`TreeNode`方法。
+`TreeNode`可以像链表一样被遍历和使用，在具有大量元素的情况下支持更快的查找。然而，
+由于在正常使用中的绝大多数存储桶的元素不会太多，因此在方法中检查`TreeNode`的操作可能会被延迟。
 
-`TreeNode`桶主要通过`hashCode`进行排序，但如果两个元素具有相同的`class C implements Comparable<C>`类型，
+`TreeNode`主要通过哈希码进行排序，如果哈希码相同，且两个元素具有相同的`class C implements Comparable<C>`类型，
 那么就用它们的`compareTo`方法来排序。(我们通过反射检查泛型来验证这一点--参见`comparableClassFor`方法)。
-当键具有不同的哈希值或可排序时，红黑树在最坏情况下具有 O(logN) 的性能。因此，在意外或恶意使用情况下，
-（例如`hashCode()`方法返回的值分布较差，以及在许多键共享一个`hashCode`）只要它们也是`Comparable`,
-性能就不会损耗太多。
+在插入时，使用类名和`identityHashCode`作为最后的比较。
 
 因为`TreeNode`的大小是`Node`的两倍，所以我们只在存储桶包含足够多的节时才会使用它们
 （参见`TREEIFY_THRESHOLD`）。当存储桶变得太小的时候(由于`remove`或`resizing`)，它们会被转换回链表。
@@ -84,12 +82,11 @@ Map m = Collections.synchronizedMap(new HashMap(...));
 大多数内部方法还接受一个 "tab" 参数，通常是当前的哈希表，但在调整大小或转换时可能是一个新的或旧的哈希表。
 
 当链表转化为红黑树、被拆分或红黑树转化为链表时，我们让它们保持相同的相对访问/遍历顺序（即字段`Node.next`），
-以更好地保存位置性，并稍微简化了对调用`iterator.remove`的拆分和遍历的处理。当在插入上使用比较器时，
-为了保持总体顺序（或接近这里要求的顺序），我们使用类名和`identityHashCode`作为最后的比较。
+以更好地保存位置性，并稍微简化了对调用`iterator.remove`的拆分和遍历的处理。
 
-由于子类`LinkedHashMap`的存在，普通模式与树模式之间的使用和转换变得复杂。请看下面定义的钩子方法，
-这些方法在插入、删除和访问时被调用，允许`LinkedHashMap`内部保持独立于这些机制。
-(这也要求将`map`实例传递给一些可能创建新节点的实用方法。)
+由于子类`LinkedHashMap`的存在，普通模式与树模式之间的使用和转换变得复杂。我们定义了`afterNodeAccess(Node<K,V> p)`、
+`afterNodeInsertion`和`afterNodeRemoval(Node<K,V> p)`回调方法，这些方法在插入、删除和访问后被调用，
+允许`LinkedHashMap`实现自己的机制。(这也要求将`map`实例传递给一些可能创建新节点的实用方法。)
 
 # 1. 内部类
 
@@ -142,7 +139,14 @@ static class Node<K,V> implements Map.Entry<K,V> {
 static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V>
 ```
 红黑树结点。继承`LinkedHashMap.Entry`（进而继承`Node`），因此也可以用作常规节点或链接节点。
-红黑树的定义和算法参见 [《算法4》红黑树][red-black-tree]。
+红黑树的定义和算法参见算法导论。
+
+红黑树性质：
+1. 每个结点或是红色、或是黑色的。
+2. 根结点是黑色的。
+3. 底层的 NULL 结点（又叫外部结点）是黑色的。
+4. 如果一个结点是红色的，则它的两个子结点都是黑色的。这保证了不会有连续的红结点。
+5. 对于每个结点，从该结点到其所有后代叶结点的简单路径上，均包含相同数目的黑色结点。
 
 `LinkedHashMap.Entry`定义如下所示：
 ```java
@@ -164,7 +168,7 @@ TreeNode<K,V> left;
 TreeNode<K,V> right;
 // 链式结构中前一个结点
 TreeNode<K,V> prev;
-// 指向当前结点的链接是不是红链接
+// 当前结点是不是红结点
 boolean red;
 ```
 
@@ -402,7 +406,7 @@ static <K,V> TreeNode<K,V> rotateRight(TreeNode<K,V> root,
 
 #### 1.2.3.6 putTreeVal
 ```java
-// 将键值对插入树中。如果已经 k 已经存在就返回该结点。
+// 将键值对插入树中。如果 k 已经存在就返回该结点。
 final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                int h, K k, V v) {
     Class<?> kc = null;
@@ -475,32 +479,42 @@ final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
 // 返回新的根节点
 static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
                                             TreeNode<K,V> x) {
-    // 我们总是用红链接将新结点和它的父结点相连
+    // 新结点总是红结点。这样就不会破坏性质 5（参见 TreeNode 开头注释）。
+    // 如果 x 的父结点 xp 是根结点，则 xp 会是黑结点。
+    // 这样，可能被破坏的就有性质 2、性质 4。
+    // 当 x 是唯一的结点时，就会破坏性质 4；但 xp 是红结点时，就会破坏性质 4。
+    // 我们需要修复对性质 2、4 的破坏。
     x.red = true;
     for (TreeNode<K,V> xp, xpp, xppl, xppr;;) {
         // 如果 x 的父结点 xp 为 null，那么 x 是根节点
         if ((xp = x.parent) == null) {
-            // 根节点的链接颜色需要是黑色
+            // 将根结点颜色变为黑色，修正对性质 5 的破坏
             x.red = false;
             return x;
         }
-        // 否则如果 xp 具有黑链接，或者 xp 是根节点，
-        // 则直接返回 root。根据红黑树的定义，红黑树中允许红色链接和黑色链接交替出现
+        // 否则如果 xp 是黑结点，或者 xp 是根节点，则性质 2、4 都保持，已经平衡。
         else if (!xp.red || (xpp = xp.parent) == null)
             return root;
-        // 否则 xp 具有红链接，此时会有连续的红链接存在，需要平衡。
-        // 如果 xp 是父父结点 xpp 的左子节点
+        // 否则 xp 是红结点，性质 4 被破坏，需要修正。如果 xp 是 x 的爷爷结点 xpp 的左子节点
         if (xp == (xppl = xpp.left)) {
-            // 如果 xpp 的右子节点存在，且它具有红链接。
-            // 此时 xpp 左右子结点都具有红链接，它们三个结点构成一个 4-结点，
-            // 需要反转颜色并将红色向上传播
+            // 因为 xp 是红色的，由性质 4 可推出 xpp 一定是黑色的。
+
+            // 【情况1】：如果 xpp 的右子节点存在，且它是红结点，此时 xpp 左右子结点都是红结点。
             if ((xppr = xpp.right) != null && xppr.red) {
                 /*
-                        |             ||
-                       xpp     =>    xpp
-                     //  \\         /*  \*
-                    xp   xppr      xp  xppr
-                注：双斜线表示红链接，单斜线和星号表示黑链接
+                这种【情况1】中，我们将 xpp 和它的子结点颜色反转，这保证了路径上的黑结点
+                数量保持不变，性质 5 没有被破坏。
+                x 向上移动，现在性质 4 的破坏只可能发生在新的 x 和它的父结点之间。
+
+                        |                 |
+                     (xpp)              [xpp] <- 新的 x
+                    /     \            /     \
+                  [xp]   [xppr]  =>  (xp)   (xppr)
+                   |                  |
+                  [x]                [x]
+
+                注：我用 (..) 表示黑结点，[..] 表示红结点。不加任何括号表示颜色未知。
+                同时，直直的链接表示可以是左子结点也可以是右子结点。
                 */
                 // 反转颜色
                 xppr.red = false;
@@ -509,121 +523,88 @@ static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
                 // x 向上移动
                 x = xpp;
             }
-            // 否则从 xpp 到 x 将有两条连续的红色链接
+            // 否则从 xpp 到 x 将有两个连续的红结点
             else {
-                // 如果 x 是 xp 的右结点
+                // 【情况2】：如果 x 是 xp 的右结点
                 if (x == xp.right) {
                     /*
-                        xpp          xpp
-                       //           //
-                      xp     =>    xp
-                       \\         //
-                        x         x
+                    通过左旋，将【情况2】变为【情况3】，进行统一处理
+
+                        (xpp)          (xpp)
+                       /              /
+                     [xp]     =>    [xp]
+                         \          /
+                         [x]      [x]
                     */
-                    // 对 xp 进行左旋转，旋转之后 x 将变成父结点，xp 变为子结点。
-                    // 我们将 x 赋值为 xp，x 就还是子结点
                     root = rotateLeft(root, x = xp);
                     // 重新设置 xp 和 xpp
                     xpp = (xp = x.parent) == null ? null : xp.parent;
                 }
                 if (xp != null) {
                     /*
-                          xpp         xp
-                         //         //  \\
-                        xp     =>  x    xpp
-                       //
-                       x
+                    【情况3】：有连续两个左子红结点。通过改变结点颜色和右旋转，
+                    我们仍然维持了性质 5，并且此时性质 4 也被修复：不再有连续的红结点。
+                    循环将会退出。
+
+                          (xpp)         (xp)
+                         /             /    \
+                       [xp]     =>   [x]   [xpp]
+                       /
+                     [x]
                     */
-                    // 此时会有连续两条红色左链接。将 xp 的链接颜色设为黑色，
-                    // 使其变为一条红色左链接：xp->x
                     xp.red = false;
                     if (xpp != null) {
-                        // 将 xpp 的链接设为红色
                         xpp.red = true;
-                        // xpp 的右子结点可能不存在，为了红黑树的平衡，
-                        // 将 xpp 右旋，此时 xp 变为 xpp 的父结点，
-                        // 而 xpp 变为 xp 的右子结点。
-                        // 而 xpp 的链接为红色，则此时 xp 的左右两条链接都是红色，
-                        // 这样下一次循环红色就可以继续向上传播，并且 x 也可以向上移动
                         root = rotateRight(root, xpp);
                     }
                 }
             }
         }
-        // 如果 xp 是父父结点 xpp 的右子结点
+        // 【镜像】如果 xp 是父父结点 xpp 的右子结点
         else {
-            // 如果 xpp 的左子结点存在，且它具有红链接。
-            // 此时 xpp 左右子结点都具有红链接，它们三个结点构成一个 4-结点，
-            // 需要反转颜色并将红色向上传播
             if (xppl != null && xppl.red) {
                 /*
-                        |             ||
-                       xpp     =>    xpp
-                     //  \\         /*  \*
-                    xppl  xp      xppl   xp
+                        |                 |
+                     (xpp)              [xpp] <- 新的 x
+                    /     \            /     \
+                 [xppl]   [xp]  =>  (xppl)   (xp)
+                           |                  |
+                          [x]                [x]
                 */
                 xppl.red = false;
                 xp.red = false;
                 xpp.red = true;
                 x = xpp;
             }
-            // 否则从 xpp 到 x 将有两条连续的红色链接
             else {
-                // 如果 x 是 xp 的左结点
                 if (x == xp.left) {
                     /*
-                        xpp          xpp
-                          \\           \\
-                           xp   =>      xp
-                          //             \\
-                          x                x
+                     (xpp)            (xpp)
+                          \                \
+                          [xp]   =>       [xp]
+                          /                  \
+                        [x]                  [x]
                     */
-                    // 对 xp 进行右旋转，旋转之后 x 将变成父结点，xp 变为子结点。
-                    // 我们将 x 赋值为 xp，x 就还是子结点
                     root = rotateRight(root, x = xp);
                     xpp = (xp = x.parent) == null ? null : xp.parent;
                 }
                 if (xp != null) {
                     /*
-                        xpp             xp
-                          \\          //  \\
-                           xp    =>  xpp    x
-                            \\
-                              x
+                     (xpp)              (xp)
+                          \            /    \
+                          [xp]   =>  [xpp]  [x]
+                             \
+                             [x]
                     */
-                    // 此时会有连续两条红色右链接。将 xp 的链接颜色设为黑色，
-                    // 使其变为一条红色右链接：xp->x
                     xp.red = false;
                     if (xpp != null) {
-                        // 将 xpp 的链接设为红色
                         xpp.red = true;
-                        // xpp 的左子结点可能不存在，为了红黑树的平衡，
-                        // 将 xpp 左旋，此时 xp 变为 xpp 的父结点，
-                        // 而 xpp 变为 xp 的左子结点。
-                        // 而 xpp 的链接为红色，则此时 xp 的左右两条链接都是红色，
-                        // 这样下一次循环红色就可以继续向上传播，并且 x 也可以向上移动
                         root = rotateLeft(root, xpp);
                     }
                 }
             }
         }
     }
-
-    /*
-    注意到，和一般的红黑树定义不同的是，此实现允许红右链接的存在：
-            xp
-             \\
-               r
-    但不会出现下列情况（l、r 是叶子结点）：
-            xp        xp
-          //  \*    /*  \\
-         l     r    l     r
-
-    此外，单独的叶子结点都会具有红链接：
-        xp     xp
-      //         \\
-     l             r
-    */
 }
 ```
 
@@ -759,6 +740,8 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         tab[index] = first.untreeify(map);
         return;
     }
+
+    // 下面的代码中，p 是需要被删除的结点。如果 p 是黑结点，则删除 p 将引起红黑性质的破坏。
     TreeNode<K,V> p = this, pl = left, pr = right, replacement;
     // 如果待删除结点的左子结点和右子结点都存在
     if (pl != null && pr != null) {
@@ -769,8 +752,9 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         // 交换待删除结点和 s 的颜色
         boolean c = s.red; s.red = p.red; p.red = c; // swap colors
         TreeNode<K,V> sr = s.right;
-        // 另 pp 为 p 的父结点
+        // 令 pp 为 p 的父结点
         TreeNode<K,V> pp = p.parent;
+        // 下面我们将要交换 p 和 s 的位置
         // 如果 s 是 p 的右子结点。说明 p 的右子树中只有 s 一个结点
         if (s == pr) { // p was s's direct parent
             /*
@@ -781,18 +765,18 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
             p.parent = s;
             s.right = p;
         }
-        // 否则 p 的右子树结点数量大于 1
+        // 否则 s 不是唯一的结点
         else {
-            TreeNode<K,V> sp = s.parent;
             /*
-                p         s
-                 \         \
-                 pr        pr
-                 ...  =>   ...
-                 sp        sp
-                 |         |
-                 s         p
+                p           s
+                 \           \
+                  ..          ..
+                   |   =>      |
+                   sp          sp
+                  /           /
+                 s           p
             */
+            TreeNode<K,V> sp = s.parent;
             if ((p.parent = sp) != null) {
                 if (s == sp.left)
                     sp.left = p;
@@ -803,19 +787,6 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
                 pr.parent = s;
         }
         p.left = null;
-        /*
-             pp
-             |*
-             s
-            / \
-           pl  pr
-               ...
-               sp
-               |
-               p
-                \\
-                 sr
-        */
         // 将 s 的右结点和 p 连接
         if ((p.right = sr) != null)
             sr.parent = p;
@@ -830,13 +801,17 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
             pp.left = s;
         else
             pp.right = s;
-        // sr 不等于 null，它是叶子结点，具有红链接
         if (sr != null)
             replacement = sr;
         else
             replacement = p;
     }
-    // 此时 p 处于树的倒数第二层，它的子结点是叶子结点，且具有红链接
+    /*
+    此时 p 如果有子结点，它的子结点将是叶子结点
+       p      p         p
+      /   或    \   或
+     pl         pr
+    */
     // 如果 p 没有右结点，左结点 pl 存在
     else if (pl != null)
         // replacement 指向 pl
@@ -851,27 +826,38 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         replacement = p;
 
     /*
-    最后，replacement 会指向最底层结点。有以下几种情况：
+    p 要被删除，可以用 p 的后继结点 replacement 替换 p。有以下两种情况：
+
     （1）replacement 指向 p
-          pp   pp
-         /       \
-        p         p
+          pp       pp
+         /           \
+        p <- re       p <- re
+        此时需要用 null 替换 p，也就是删除 p。为了后续的便利性，
+        我们假定 p 此时被 null 替换。删除操作将在平衡后进行。
+        如果不这样处理，而直接删除 p，从 pp 开始平衡的话，看看下面的情况：
+             |
+            (pp)
+           /    \
+         (p)    [r]
+               /   \
+             (l)   (r)
+        这将导致 balanceDeletion 方法中不会对 r 进行平衡。
+
     （2）replacement 不指向 p
            p    p
-         //      \\
-        l          r
-        此时 replacement 指向 l 或 r
+          /      \
+        re        re
+        此时可以用 replacement 替换 p。
     */
 
-    // 如果 replacement 不等于 p，交换 replacement 和 p
+    // 如果 replacement 不等于 p，用 replacement 替换 p
     if (replacement != p) {
         /*
-           pp                pp
-           |                 ||
-           p            =>   replacement
-           ||                |
-           replacement       p
-        注意，交换了位置但没有交换颜色
+           pp       pp
+           |        |
+           p   =>   re
+           |        |
+           re       p
         */
         TreeNode<K,V> pp = replacement.parent = p.parent;
         if (pp == null)
@@ -883,25 +869,12 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         // 经过交换，p 被换到了树的最底层，将 p 解除链接，从树中删除
         p.left = p.right = p.parent = null;
     }
-    // 此时，p 是最底层结点
 
-    /*
-    如果 p 具有红链接，删除之后不需要平衡；否则，就有以下情况：
-    （1）replacement 指向 p
-            pp      pp
-           /*   或    \*
-          p            p
-        p 具有黑色链接，不能安全地删除。此时从 p 开始往上平衡
-    （2）replacement 不指向 p
-               ||              ||
-          replacement  或  replacement
-        replacement 不指向 p 的情况，replacement 之前是 p 的唯一一个叶子结点，
-        它们交换后，replacement 成了 p 的父结点。balanceDeletion 只会简单地将
-        replacement 的链接改为黑色并返回。
-    */
+    // 此时，p 是叶结点。如果 p 是红结点，则可以删除它而不破坏任何性质。
+    // 否则，p 是黑结点，此时，需要进行平衡。
     TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
 
-    // 如果 replacement 等于 p，则需要将 p 解除链接，从树中删除
+    // 如果 replacement 等于 p，则删除 p
     if (replacement == p) {
         TreeNode<K,V> pp = p.parent;
         p.parent = null;
@@ -921,92 +894,115 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
 
 #### 1.2.3.11 balanceDeletion
 ```java
-// balanceDeletion 平衡后，可以删除树底结点 x
+// 从树底开始平衡树，以便能够安全地删除结点 x
 static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                                            TreeNode<K,V> x) {
+    /*
+    在删除操作中，由于被删除的结点是黑结点，原来路径上的黑结点数量减 1，会导致性质 5 的破坏。
+    如果根结点被替换为红结点，则性质 2 可能被破坏；
+    如果 x 和父结点 xp 都是红结点，又会导致性质 4 被破坏。
+
+    为了修复性质 5，我们需要使得 x 路径上的黑结点数量加 1；在此过程中，也修复性质 2、4。
+    */
+
     for (TreeNode<K,V> xp, xpl, xpr;;) {
-        // 如果 x 等于 null 或移动到了根结点，则平衡完成
+        // 如果 x 等于 null 或指向根结点，则可以直接返回
         if (x == null || x == root)
             return root;
         // 如果平衡后 x 变成了根结点
         else if ((xp = x.parent) == null) {
-            // 根结点具有黑色链接
+            // 将根结点置为黑色，修正性质 2
             x.red = false;
-            // 返回新的根结点
             return x;
         }
-        // 如果 x 具有红色链接，则可以安全地删除
+        // 如果 x 是红结点，将其变为黑结点，这样可以增加路径上的黑色结点数量，
+        // 修复性质 5。而且如果 x 是红结点，则由性质 2、4，它的父结点必定存在且为黑结点。
+        // 因此，树的性质全部保持，可以返回。
         else if (x.red) {
             x.red = false;
             return root;
         }
-        // 如果 x 是它的父结点 xp 的左子结点
-        // 类似于 deleteMin？
+        // 否则如果 x 是 xp 的左子结点
         else if ((xpl = xp.left) == x) {
-            // 如果 xp 的右子结点存在且具有红色链接
+            // 【情况1】 如果 xp 的右子结点存在且是红结点
             if ((xpr = xp.right) != null && xpr.red) {
                 /*
-                     xp             xpr
-                   /*  \\    =>    //  \
-                  x     xpr       xp    r
-                        / \      /* \
-                       l   r    x    l
-                从右子树中移一个结点到左子树中
+                在【情况1】中，改变结点颜色和进行左旋转。这些变化不会改变
+                任何路径上的黑结点数量，也不会破坏其他性质。
+                【情况1】主要用来向【情况2】、【情况3】、【情况4】转换。
+
+                     |                   |
+                    (xp)               (xpr)
+                   /    \      =>     /     \
+                 (x)   [xpr]        [xp]    (r)
+                      /     \      /    \
+                     (l)    (r)   (x)   (l) <- 新的 xpr
                 */
                 xpr.red = false;
                 xp.red = true;
                 root = rotateLeft(root, xp);
-                // xpr 要么是 null，要么是上图中的 l
                 xpr = (xp = x.parent) == null ? null : xp.right;
             }
-            // 如果 xpr 等于 null，x 向上移动
+            // 如果 xpr 等于 null，x 向上移动。
             if (xpr == null)
                 x = xp;
             else {
                 TreeNode<K,V> sl = xpr.left, sr = xpr.right;
-                // 如果 xpr 的两个子结点都不是具有红色链接的结点
+                // 【情况2】如果 xpr 的两个子结点都不是红结点
                 if ((sr == null || !sr.red) &&
                     (sl == null || !sl.red)) {
                     /*
-                       xp               xp
-                      /* \*            /* \\
-                     x   xpr     =>   x   xpr
-                        /*  \*           /*  \*
-                       ..    ..         ..    ..
+                    在【情况2】中，将 xpr 变为红结点，这样 xpr 路径上的
+                    黑结点数量减 1，和 x 路径上黑结点数量相等了。但是，xp 这一路径
+                    上的黑结点数量少 1。
+                    如果是由【情况1】转到【情况2】，那么 xp 就是红结点，通过将其变为
+                    黑结点，可以让路径上的黑结点数量保持平衡，则红黑树所以性质得以保持，
+                    可以返回。
+
+                        xp                 xp <- 新的 x
+                       /  \               /  \
+                     (x)  (xpr)    =>   (x)  [xpr]
+                          /    \             /   \
+                         (l)   (r)          (l)  (r)
                     */
                     xpr.red = true;
                     // x 向上移动
                     x = xp;
                 }
                 else {
-                    // 否则 xpr 有一个具有红色链接的子结点
+                    // 否则 xpr 有一个红结点。
 
-                    // 如果 xpr 的右子结点 sr 不具有红色链接
+                    // 【情况3】如果 xpr 的左子结点是红色的
                     if (sr == null || !sr.red) {
                         /*
-                               xpr        sl
-                              //  \   =>    \\
-                             sl    sr        xpr
-                                               \
-                                                sr
+                        通过变色和右旋转，将【情况3】变为【情况4】
+                             xp                xp
+                            /  \              /  \
+                          (x)  (xpr)        (x)  (sl) <- 新的 xpr
+                              /     \   =>          \
+                             [sl]   (sr)            [xpr]
+                                                      \
+                                                      (sr)
                         */
                         if (sl != null)
                             sl.red = false;
                         xpr.red = true;
                         root = rotateRight(root, xpr);
-                        // 将 xpr 指向 sl
                         xpr = (xp = x.parent) == null ?
                             null : xp.right;
                     }
-                    // 此时 xpr 的右子结点会具有红色链接。
+                    // 此时 xpr 的右子结点是红结点。
 
                     /*
-                    下面的代码转换如下：
-                        xp               xpr
-                       /* \*            /*  \*
-                      x   xpr    =>    xp    sr
-                            \\        /*
-                             sr      x
+                    【情况4】：通过变色和左旋转，将 x 路径上的黑结点数量加 1，
+                    且此时其他结点的黑色结点数不变，则性质 5 被修复，也没有破坏其他性质，
+                    红黑树平衡，可以返回。
+
+                        xp                 xpr
+                       /  \               /   \
+                     (x)  (xpr)    =>   (xp)  (sr)
+                              \         /
+                              [sr]    (x)
                     */
                     if (xpr != null) {
                         xpr.red = (xp == null) ? false : xp.red;
@@ -1022,23 +1018,22 @@ static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                 }
             }
         }
-        // 否则 x 是它的父结点 xp 的右子结点
+        // 【镜像】否则 x 是它的父结点 xp 的右子结点
         else {
             if (xpl != null && xpl.red) {
                 /*
-                     xp             xpl
-                   //  \*    =>    /  \\
-                  xpl    x        l    xp
-                  / \                 /  \*
-                 l   r               r    x
+                       |                        |
+                      (xp)                    (xpl)
+                     /    \      =>          /     \
+                   [xpl]  (x)              (l)     [xp]
+                  /     \                         /    \
+                 (l)    (r)          新的 xpl -> (r)   (x)
                 */
                 xpl.red = false;
                 xp.red = true;
                 root = rotateRight(root, xp);
-                // xpl 要么是 null，要么是上图中的 r
                 xpl = (xp = x.parent) == null ? null : xp.left;
             }
-            // 如果 xpl 等于 null，x 向上移动
             if (xpl == null)
                 x = xp;
             else {
@@ -1047,42 +1042,40 @@ static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                 if ((sl == null || !sl.red) &&
                     (sr == null || !sr.red)) {
                     /*
-                         xp          xp
-                        /* \*       // \*
-                       xpl  x  =>  xpl  x
-                      /* \*       /* \*
-                     ..  ..      ..  ..
+                           xp              xp
+                         /   \           /   \
+                      (xpl)  (x)  =>  [xpl]  (x)
+                      /   \           /   \
+                    (l)   (r)       (l)   (r)
                     */
                     xpl.red = true;
-                    // x 向上移动
                     x = xp;
                 }
                 else {
                     if (sl == null || !sl.red) {
                         /*
-                            xpl             sr
-                           /*  \\   =>     // 
-                          sl    sr        xpl
-                                         /*
-                                        sl
+                                xp                 xp
+                              /   \              /   \
+                           (xpl)   x           (sr)   x
+                           /    \       =>     /  ^
+                         (sl)   [sr]        [xpr]  \ 
+                                             /      新的 xpl
+                                           (sl)
                         */
                         if (sr != null)
                             sr.red = false;
                         xpl.red = true;
                         root = rotateLeft(root, xpl);
-                        // 将 xpl 指向 sr
                         xpl = (xp = x.parent) == null ?
                             null : xp.left;
                     }
-                    // 此时 xpl 的左子结点会具有红色链接。
 
                     /*
-                    下面的代码转换如下：
-                        xp              xpl
-                       /* \*           /*  \*
-                      xpl  x    =>    sl    xp
-                     //                      \*
-                    sl                        x
+                           xp              xpl
+                         /   \            /   \
+                       (xpl) (x)    =>  (sl)  (xp)
+                      /                          \
+                     [sl]                        (x)
                     */
                     if (xpl != null) {
                         xpl.red = (xp == null) ? false : xp.red;
@@ -1093,7 +1086,6 @@ static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                         xp.red = false;
                         root = rotateRight(root, xp);
                     }
-                    // 此时树已平衡，可以返回了
                     x = root;
                 }
             }
@@ -2743,7 +2735,6 @@ final int capacity() {
 
 [map]: Map.md
 [abstract-map]: AbstractMap.md
-[red-black-tree]: https://algs4.cs.princeton.edu/33balanced/
 [spliterator]: Spliterator.md
 [array-list]: ArrayList.md
 [abstract-set]: AbstractSet.md
