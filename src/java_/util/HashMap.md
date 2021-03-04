@@ -14,11 +14,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 
 假设哈希函数将元素均匀地分散在存储桶（哈希表中的一个槽）中，则此实现为基本操作（`get`和`put`）提供常数时间的性能。
 集合视图上的迭代所需的时间与`HashMap`实例的“容量”（存储桶数）及其大小（键值对数）成正比。
-因此，如果迭代性能很重要，则不要将初始容量设置得过高（或负载因数过低），这一点非常重要。
+因此，如果迭代性能很重要，则不要将初始容量设置得过高（或负载因子过低），这一点非常重要。
 
 `HashMap`的实例具有两个影响其性能的参数：初始容量和负载因子。容量是哈希表中存储桶的数量，
 初始容量只是创建哈希表时的容量。负载因子是在自动增长哈希表容量之前所允许的哈希表元素数和容量之比。
-当哈希表中的条目数超过负载因子和当前容量的乘积时，哈希表将被重新哈希（即，内部数据结构将被重建），
+当哈希表中的元素数量超过负载因子和当前容量的乘积时，哈希表将被重新哈希（即，内部数据结构将被重建），
 然后哈希表的容量增大为原来的大约两倍。
 
 通常，默认负载因子（0.75）在时间和空间成本之间提供了一个很好的权衡。较高的值会减少空间开销，
@@ -26,8 +26,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
 应考虑`HashMap`中的预期条目数及其负载因子，以最大程度地减少重哈希操作的次数。
 如果初始容量大于最大条目数除以负载因子，则不会发生重哈希操作。
 
-如果有许多键具有相同的`hashCode`，则肯定会降低`HashMap`的性能。为了减少影响，当键为`Comparable`时，
-此类可以使用键之间的比较顺序来构造**红黑树**。
+如果有许多键具有相同的`hashCode`，则肯定会降低`HashMap`的性能。为了减少影响，此类可以使用键之间的比较顺序来构造**红黑树**。
+当键为`Comparable`时，则可以更好的进行这种比较。
 
 请注意，此实现未同步。如果多个线程同时访问`HashMap`，并且至少有一个线程在结构上修改此`HashMap`，则必须在外部进行同步。
  （结构修改是添加或删除一个或多个键值对的任何操作；仅更改已经包含的键相关联的值不是结构修改。）
@@ -57,10 +57,10 @@ Map m = Collections.synchronizedMap(new HashMap(...));
 
 `TreeNode`主要通过哈希码进行排序，如果哈希码相同，且两个元素具有相同的`class C implements Comparable<C>`类型，
 那么就用它们的`compareTo`方法来排序。(我们通过反射检查泛型来验证这一点--参见`comparableClassFor`方法)。
-在插入时，使用类名和`identityHashCode`作为最后的比较。
+在插入时，使用类名和`identityHashCode`作为最后的比较手段。
 
-因为`TreeNode`的大小是`Node`的两倍，所以我们只在存储桶包含足够多的节时才会使用它们
-（参见`TREEIFY_THRESHOLD`）。当存储桶变得太小的时候(由于`remove`或`resizing`)，它们会被转换回链表。
+因为`TreeNode`的大小是`Node`的两倍，所以我们只在存储桶包含足够多的元素时才会使用它们
+（参见`TREEIFY_THRESHOLD`）。当存储桶变得太小的时候(由于`remove`或`resizing`)，它们又会被转换回链表。
 在用户哈希码分布良好的情况中，`TreeNode`很少被使用。理想情况下，也就是随机哈希码，
 桶中结点数量遵循泊松分布，如果负载因子为默认的 0.75，则泊松分布的平均参数约为 0.5。
 尽管由于大小调整的粒度，会有较大的方差。如果忽略方差，链表大小为`k`的可能性是`(exp(-0.5) * pow(0.5, k) / factorial(k))`。
@@ -84,15 +84,15 @@ Map m = Collections.synchronizedMap(new HashMap(...));
 当链表转化为红黑树、被拆分或红黑树转化为链表时，我们让它们保持相同的相对访问/遍历顺序（即字段`Node.next`），
 以更好地保存位置性，并稍微简化了对调用`iterator.remove`的拆分和遍历的处理。
 
-由于子类`LinkedHashMap`的存在，普通模式与树模式之间的使用和转换变得复杂。我们定义了`afterNodeAccess(Node<K,V> p)`、
+由于子类`LinkedHashMap`的存在，普通模式与树模式之间调用和转换变得复杂。我们定义了`afterNodeAccess(Node<K,V> p)`、
 `afterNodeInsertion`和`afterNodeRemoval(Node<K,V> p)`回调方法，这些方法在插入、删除和访问后被调用，
-允许`LinkedHashMap`实现自己的机制。(这也要求将`map`实例传递给一些可能创建新节点的实用方法。)
+允许`LinkedHashMap`实现自己的机制。(这也要求将`map`实例传递给一些可能创建新节点的方法。)
 
 # 1. 内部类
 
 ## 1.1 Node
 ```java
-// 基本哈希表节点。拉链法式，用于大多数条目。
+// 基本哈希表节点。单链表结构，用于大多数条目。
 static class Node<K,V> implements Map.Entry<K,V> {
     final int hash;
     final K key;
@@ -144,7 +144,7 @@ static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V>
 红黑树性质：
 1. 每个结点或是红色、或是黑色的。
 2. 根结点是黑色的。
-3. 底层的 NULL 结点（又叫外部结点）是黑色的。
+3. 底层的`null`结点（又叫外部结点）是黑色的。
 4. 如果一个结点是红色的，则它的两个子结点都是黑色的。这保证了不会有连续的红结点。
 5. 对于每个结点，从该结点到其所有后代叶结点的简单路径上，均包含相同数目的黑色结点。
 
@@ -212,11 +212,11 @@ static <K,V> boolean checkInvariants(TreeNode<K,V> t) {
     // 返回 false
     if (tl != null && (tl.parent != t || tl.hash > t.hash))
         return false;
-    // 如果 t 的右子节点 tr 的 parent 指针不等于 t，或者 tr 的 hash 大于 t 的 hash，
+    // 如果 t 的右子节点 tr 的 parent 指针不等于 t，或者 tr 的 hash 小于 t 的 hash，
     // 返回 false
     if (tr != null && (tr.parent != t || tr.hash < t.hash))
         return false;
-    // 如果有连续的红链接，返回 false
+    // 如果有连续的红结点，返回 false
     if (t.red && tl != null && tl.red && tr != null && tr.red)
         return false;
     // 左子结点存在，递归地检查左子结点
@@ -242,15 +242,15 @@ static <K,V> void moveRootToFront(Node<K,V>[] tab, TreeNode<K,V> root) {
         // 如果 root 不是第一个结点，则将其移到开头
         if (root != first) {
             Node<K,V> rn;
-            // 见 root 放到开头
+            // 将 root 放到开头
             tab[index] = root;
             TreeNode<K,V> rp = root.prev;
-            // 如果存在的话，将 root 的 prev 和 next 连接起来
+            // 如果存在的话，将 root 原来的 prev 和 next 连接起来
             if ((rn = root.next) != null)
                 ((TreeNode<K,V>)rn).prev = rp;
             if (rp != null)
                 rp.next = rn;
-            // 将 root 和原来第一个结点连接起来
+            // 将 root 和 first 连接起来
             if (first != null)
                 first.prev = root;
             root.next = first;
@@ -278,10 +278,10 @@ final TreeNode<K,V> find(int h, Object k, Class<?> kc) {
         // hash 码相等，就比较 key 是否相等
         else if ((pk = p.key) == k || (k != null && k.equals(pk)))
             return p;
-        // 否则如果左子结点为 null，则移到右子节点
+        // 否则如果左子结点为 null，则移动到右子节点
         else if (pl == null)
             p = pr;
-        // 否则如果右子结点为 null，则移到左子节点
+        // 否则如果右子结点为 null，则移动到左子节点
         else if (pr == null)
             p = pl;
         // 否则如果左右子结点都不为 null
@@ -446,7 +446,7 @@ final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
         }
 
         TreeNode<K,V> xp = p;
-        // 根据 dir 的结果，让 p 移到左结点或右结点；
+        // 根据 dir 的结果，让 p 移动到左结点或右结点；
         // 如果 p 等于 null，则需要插入新结点
         if ((p = (dir <= 0) ? p.left : p.right) == null) {
             Node<K,V> xpn = xp.next;
@@ -460,8 +460,7 @@ final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
             xp.next = x;
             // 新结点的 prev 和 parent 指针指向它的父结点
             x.parent = x.prev = xp;
-            // 父结点原来的 next 结点不为 null，
-            // 则把新结点插入父结点和原来 next 结点之间
+            // 父结点原来的 next 结点不为 null，则把新结点插入父结点和原来 next 结点之间
             if (xpn != null)
                 ((TreeNode<K,V>)xpn).prev = x;
             // 平衡插入，并保证根节点在开头
@@ -610,7 +609,7 @@ static <K,V> TreeNode<K,V> balanceInsertion(TreeNode<K,V> root,
 
 #### 1.2.3.8 treeify
 ```java
-// 将从当前结点为链表头结点的链表转化为红黑树
+// 将以当前结点开头的链表转化为红黑树
 final void treeify(Node<K,V>[] tab) {
     TreeNode<K,V> root = null;
     // x 是当前结点
@@ -621,7 +620,7 @@ final void treeify(Node<K,V>[] tab) {
         // 如果根节点还未指定，将 x 作为根节点。也就是将当前节点(this)作为根节点
         if (root == null) {
             x.parent = null;
-            // 根节点具有黑色链接
+            // 根节点是黑结点
             x.red = false;
             root = x;
         }
@@ -641,6 +640,7 @@ final void treeify(Node<K,V>[] tab) {
                     dir = 1;
                 // 这里和 putTreeVal 有些差别，没有使用 equals 比较键的过程，
                 // 这是因为我们树化的过程需要安排每个结点的位置，必须给出大小排列。
+
                 // 如果不能使用 Comparable 比较，或比较结果为 0
                 else if ((kc == null &&
                           (kc = comparableClassFor(k)) == null) ||
@@ -672,7 +672,7 @@ final void treeify(Node<K,V>[] tab) {
 
 #### 1.2.3.9 untreeify
 ```java
-// 将当前结点为链表头结点的红黑树转换为普通的链表
+// 将从当前结点开头的链式结构上的所有结点转化为普通的链表
 final Node<K,V> untreeify(HashMap<K,V> map) {
     Node<K,V> hd = null, tl = null;
     for (Node<K,V> q = this; q != null; q = q.next) {
@@ -694,13 +694,10 @@ final Node<K,V> untreeify(HashMap<K,V> map) {
 /*
 删除当前结点，这个结点必须在这个调用之前存在。
 
-此实现比典型的红黑删除代码要复杂，因为我们不能将内部节点的内容与后继的叶子结点交换，
-后继的叶子结点被 "next" 指针钉住，在遍历过程中可以独立访问。所以我们反而要交换树的链接。
-
 如果当前树的结点数少于阈值 UNTREEIFY_THRESHOLD，那么就将树转化为链表。
-经测试触发转换的的节点数在 2 到 6 个之间，这取决于树结构。
+经测试触发转换的的节点数在 2 到 6 个之间，这取决于树的结构。
 
-@param movable 如果为 false，则删除后不移动其他结点
+@param movable 如果为 false，则删除操作后不会再移动结点的位置
 */
 final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
                           boolean movable) {
@@ -709,13 +706,14 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         return;
     // 计算当前结点(this)在哈希表中的下标
     int index = (n - 1) & hash;
-    // 获取第一个结点 first 和根结点，根结点也就是第一个结点
+    // 获取第一个结点 first 和根结点。根结点一般情况下就是第一个结点
     TreeNode<K,V> first = (TreeNode<K,V>)tab[index], root = first, rl;
     // 获取当前结点的前驱结点 pred，和后继结点 succ
     TreeNode<K,V> succ = (TreeNode<K,V>)next, pred = prev;
+    // 调整被删除结点前后结点的 prev 和 next 指针。
     // 如果 pred 为 null，则当前结点是根结点
     if (pred == null)
-        // 将根节点移除，后继结点 succ 作为新的根节点
+        // 让 succ 作为存储桶第一个结点
         tab[index] = first = succ;
     else
         // 否则将 pred 和 succ 连接
@@ -735,8 +733,8 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
             && (root.right == null
                 || (rl = root.left) == null
                 || rl.left == null))) {
-        // 将树转化为链表。之前的代码已经解除了当前结点的 next 关系，
-        // 在 untreeify 方法中，将跳过当前结点
+        // 将树转化为链表。之前的代码已经将当前结点的后继结点作为存储桶开头，
+        // 因此在 untreeify 方法中，将跳过当前结点
         tab[index] = first.untreeify(map);
         return;
     }
@@ -826,15 +824,15 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
         replacement = p;
 
     /*
-    p 要被删除，可以用 p 的后继结点 replacement 替换 p。有以下两种情况：
+    p 要被删除，可以用 p 的后继结点 replacement（下图中简写为 re）替换 p。有以下两种情况：
 
     （1）replacement 指向 p
           pp       pp
          /           \
         p <- re       p <- re
         此时需要用 null 替换 p，也就是删除 p。为了后续的便利性，
-        我们假定 p 此时被 null 替换。删除操作将在平衡后进行。
-        如果不这样处理，而直接删除 p，从 pp 开始平衡的话，看看下面的情况：
+        我们假定 p 此时已被 null 替换。删除操作将在平衡后进行。
+        如果不这样处理，而是直接删除 p，并从 pp 开始平衡的话，看看下面的情况：
              |
             (pp)
            /    \
@@ -871,10 +869,10 @@ final void removeTreeNode(HashMap<K,V> map, Node<K,V>[] tab,
     }
 
     // 此时，p 是叶结点。如果 p 是红结点，则可以删除它而不破坏任何性质。
-    // 否则，p 是黑结点，此时，需要进行平衡。
+    // 否则，p 是黑结点，此时需要进行平衡。
     TreeNode<K,V> r = p.red ? root : balanceDeletion(root, replacement);
 
-    // 如果 replacement 等于 p，则删除 p
+    // 如果 replacement 等于 p，则 p 已被视为 null 结点，结果平衡后可以安全地删除 p
     if (replacement == p) {
         TreeNode<K,V> pp = p.parent;
         p.parent = null;
@@ -954,9 +952,9 @@ static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
                     /*
                     在【情况2】中，将 xpr 变为红结点，这样 xpr 路径上的
                     黑结点数量减 1，和 x 路径上黑结点数量相等了。但是，xp 这一路径
-                    上的黑结点数量少 1。
+                    上的黑结点数量将会减少 1。
                     如果是由【情况1】转到【情况2】，那么 xp 就是红结点，通过将其变为
-                    黑结点，可以让路径上的黑结点数量保持平衡，则红黑树所以性质得以保持，
+                    黑结点，可以让路径上的黑结点数量保持平衡，则红黑树所有的性质得以保持，
                     可以返回。
 
                         xp                 xp <- 新的 x
@@ -1104,7 +1102,7 @@ static <K,V> TreeNode<K,V> balanceDeletion(TreeNode<K,V> root,
 
 @param tab: 新的哈希表
 @param index: 此结点在原来哈希表中的索引
-@param bit: 用于拆分的哈希位。这是原来哈希表中容量，也是新的哈希表掩码最高位
+@param bit: 用于拆分的哈希位。这是原来哈希表的容量，也是新的哈希表的掩码最高位
 */
 final void split(HashMap<K,V> map, Node<K,V>[] tab, int index, int bit) {
     TreeNode<K,V> b = this;
@@ -1305,8 +1303,7 @@ static final class KeySpliterator<K,V>
         // 切分为两半，注意这个两半是将哈希表分半，只有当元素均匀分布时，
         // 元素数量才可能也分半
         int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
-        // 如果太小不足以切分，返回 null；
-        // 否则返回左半边的 Spliterator
+        // 如果太小不足以切分，返回 null；否则返回左半边的 Spliterator
         return (lo >= mid || current != null) ? null :
             new KeySpliterator<>(map, lo, index = mid, est >>>= 1,
                                     expectedModCount);
@@ -1659,15 +1656,14 @@ static final int TREEIFY_THRESHOLD = 8;
 static final int UNTREEIFY_THRESHOLD = 6;
 
 // 可以对存储桶树化的最小容量。应该至少是 4 * TREEIFY_THRESHOLD，
-// 以避免调整大小和树化阈值之间的冲突。
+// 以避免 resize 和树化阈值之间的冲突。
 static final int MIN_TREEIFY_CAPACITY = 64;
 ```
 
 ## 2.2 成员变量
 ```java
 /*
-哈希表。该表在首次使用时初始化，并根据需要调整大小。分配大小时，长度始终是 2 的幂。
-（在某些操作中，我们还允许长度为零，以允许使用当前不需要的引导机制。）
+哈希表。该表在首次使用时才进行创建，并根据需要调整大小。分配大小时，长度始终是 2 的幂。
 
 设置为 transient 是为了在序列化时不要将所有结点序列化，只序列化实际存在的元素
 */
@@ -1699,7 +1695,7 @@ int threshold;
 # 3. 构造器
 ```java
 // 构造一个具有指定初始容量和负载因子的空 HashMap。
-// 此操作不会立即创建内部哈希表，只会在添加元素的时候才会创建
+// 此操作不会立即创建内部哈希表，在添加元素的时候才会创建
 public HashMap(int initialCapacity, float loadFactor) {
     if (initialCapacity < 0)
         throw new IllegalArgumentException("Illegal initial capacity: " +
@@ -1716,13 +1712,13 @@ public HashMap(int initialCapacity, float loadFactor) {
 }
 
 // 构造一个具有指定初始容量和默认负载因子的空 HashMap。
-// 此操作不会立即创建内部哈希表，只会在添加元素的时候才会创建
+// 此操作不会立即创建内部哈希表，在添加元素的时候才会创建
 public HashMap(int initialCapacity) {
     this(initialCapacity, DEFAULT_LOAD_FACTOR);
 }
 
 // 使用默认的初始容量（16）和默认的加载因子（0.75）构造一个空的 HashMap。
-// 此操作不会立即创建内部哈希表，只会在添加元素的时候才会创建
+// 此操作不会立即创建内部哈希表，在添加元素的时候才会创建
 public HashMap() {
     this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
 }
@@ -1741,7 +1737,7 @@ public HashMap(Map<? extends K, ? extends V> m) {
 ```java
 // 返回大于等于 cap 的最小 2 次幂
 static final int tableSizeFor(int cap) {
-    // 减一是为了 cap 等于 n 的 2 次幂的情况
+    // cap 可能等于 n 的 2 次幂.为了保证接下来的操作正确，需要减 1
     int n = cap - 1;
     n |= n >>> 1;  // n 的最高 2 位设置为 1
     n |= n >>> 2;  // n 的最高 4 位设置为 1
@@ -1761,11 +1757,11 @@ static final int tableSizeFor(int cap) {
 /*
 计算 key.hashCode()，并将较高位的哈希值扩散（XOR）到较低位。
 
-由于该表使用了二幂掩码，这样大多数情况下只会利用到哈希码低位的值，所以只使用当前掩码的哈希表总是会发生碰撞。
-因此我们应用一个变换，将高位的向下扩散。
+由于 HashMap 使用了二幂掩码，这样大多数情况下只会利用到哈希码低位的值，所以只使用当前掩码的哈希表总是会发生碰撞。
+因此我们应用一个变换，将高位向下扩散。
 
 在速度、实用性和位扩散的质量之间有一个权衡。因为很多常见的哈希码已经是合理分布的（所以并没有从扩散中获益），
-而且因为我们使用红黑树来处理大哈希表的哈希碰撞，所以我们只是用最简单的方式异或一些移位，以减少性能损耗，
+而且因为我们使用红黑树来处理大哈希表的哈希碰撞，所以我们只是用最简单的方式：将高位和低位进行异或，以减少性能损耗，
 以及合并最高位的影响。
 */
 static final int hash(Object key) {
@@ -1801,7 +1797,7 @@ static Class<?> comparableClassFor(Object x) {
     return null;
 }
 
-// 如果 x 匹配的类等于 kc，则返回 k.compareTo(x)，否则返回 0。
+// 如果 x 的 Class 等于 kc，则返回 k.compareTo(x)，否则返回 0。
 @SuppressWarnings({"rawtypes","unchecked"})
 static int compareComparables(Class<?> kc, Object k, Object x) {
     return (x == null || x.getClass() != kc ? 0 :
@@ -1811,7 +1807,7 @@ static int compareComparables(Class<?> kc, Object k, Object x) {
 
 ## 4.4 resize
 ```java
-// 扩容为原来两倍大小，重哈希
+// 扩容为原来两倍大小，然后重新安排所有元素的位置
 final Node<K,V>[] resize() {
     Node<K,V>[] oldTab = table;
     int oldCap = (oldTab == null) ? 0 : oldTab.length;
@@ -1856,7 +1852,7 @@ final Node<K,V>[] resize() {
     Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
     table = newTab;
     if (oldTab != null) {
-        // 变量原来哈希表所有存储桶
+        // 遍历原来哈希表所有存储桶
         for (int j = 0; j < oldCap; ++j) {
             Node<K,V> e;
             if ((e = oldTab[j]) != null) {
@@ -1947,14 +1943,14 @@ void afterNodeRemoval(Node<K,V> p) { }
 
 ## 4.8 treeifyBin
 ```java
-// 替换给定哈希索引下存储桶中的所有链表结点。
-// 如果哈希表未创建或大小小于阈值，则只会进行创建或扩容操作
+// 将给定哈希索引下存储桶中的所有 Node 结点替换为 TreeNode 结点，并转换为红黑树。
+// 如果哈希表未创建或大小小于 MIN_TREEIFY_CAPACITY，则只会进行创建或扩容操作
 final void treeifyBin(Node<K,V>[] tab, int hash) {
     int n, index; Node<K,V> e;
     // 如果哈希表未创建，或者哈希表大小小于 MIN_TREEIFY_CAPACITY，则进行创建或扩容操作
     if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
         resize();
-    // 否则键指定位置处的存储桶变成红黑树
+    // 否则将指定位置处的存储桶变成红黑树
     else if ((e = tab[index = (n - 1) & hash]) != null) {
         TreeNode<K,V> hd = null, tl = null;
         // 将所有结点替换为 TreeNode
@@ -1968,7 +1964,7 @@ final void treeifyBin(Node<K,V>[] tab, int hash) {
             }
             tl = p;
         } while ((e = e.next) != null);
-        // 在进行树化
+        // 然后转换为红黑树
         if ((tab[index] = hd) != null)
             hd.treeify(tab);
     }
@@ -1981,7 +1977,7 @@ final void treeifyBin(Node<K,V>[] tab, int hash) {
 写入键值对，实现 Map.put 操作。
 
 @param onlyIfAbsent: 如果为 true，则不改变已经存在的键值对
-@param evict: 为 false，表示新建 HashMap 时调用了此方法。此参数提供给 afterNodeInsertion 方法
+@param evict: 为 false，表示在 HashMap 构造时调用了此方法。此参数提供给 afterNodeInsertion 方法
 */
 final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                boolean evict) {
@@ -2005,16 +2001,16 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
         // 否则在链表中查找
         else {
             for (int binCount = 0; ; ++binCount) {
-                // 如果已经到遍历到最后一个结点，则插入新的结点
+                // 如果已经遍历到最后一个结点，则插入新的结点
                 if ((e = p.next) == null) {
                     p.next = newNode(hash, key, value, null);
-                    // 如果链表结点数量大于 TREEIFY_THRESHOLD，则将链表转化为树。
+                    // 如果链表结点数量大于 TREEIFY_THRESHOLD，则调用 treeifyBin 方法。
                     // 注意，由于没有算上链表中第一个结点，所以要减 1
                     if (binCount >= TREEIFY_THRESHOLD - 1)
                         treeifyBin(tab, hash);
                     break;
                 }
-                // 如果找到哈希码和键都与给读者相等的结点
+                // 如果找到了哈希码和键都与给定值相等的结点，跳出循环
                 if (e.hash == hash &&
                     ((k = e.key) == key || (key != null && key.equals(k))))
                     break;
@@ -2048,7 +2044,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
 /*
 用在 putAll 方法或构造函数中。
 
-@param evict：为 false，表示新建 HashMap 时调用了此方法。此参数提供给 afterNodeInsertion 方法
+@param evict：为 false，表示在 HashMap 构造时调用了此方法。此参数提供给 afterNodeInsertion 方法
 */
 final void putMapEntries(Map<? extends K, ? extends V> m, boolean evict) {
     int s = m.size();
@@ -2121,7 +2117,7 @@ final Node<K,V> removeNode(int hash, Object key, Object value,
     if ((tab = table) != null && (n = tab.length) > 0 &&
         (p = tab[index = (n - 1) & hash]) != null) {
         Node<K,V> node = null, e; K k; V v;
-        // 检查第一个结点的哈希码和键是否给定值相等
+        // 检查第一个结点的哈希码和键是否与给定值相等
         if (p.hash == hash &&
             ((k = p.key) == key || (key != null && key.equals(k))))
             node = p;
@@ -2299,7 +2295,7 @@ public V computeIfAbsent(K key,
     // 否则插入链表
     else {
         tab[i] = newNode(hash, key, v, first);
-        // 如果链表结点数量大于 TREEIFY_THRESHOLD，则将链表转化为树。
+        // 如果链表结点数量大于 TREEIFY_THRESHOLD，则调用 treeifyBin 方法。
         // 注意，由于没有算上链表中第一个结点，所以要减 1
         if (binCount >= TREEIFY_THRESHOLD - 1)
             treeifyBin(tab, hash);
@@ -2394,7 +2390,7 @@ public V compute(K key,
         // 否则插入链表
         else {
             tab[i] = newNode(hash, key, v, first);
-            // 如果链表结点数量大于 TREEIFY_THRESHOLD，则将链表转化为树。
+            // 如果链表结点数量大于 TREEIFY_THRESHOLD，则调用 treeifyBin 方法。
             // 注意，由于没有算上链表中第一个结点，所以要减 1
             if (binCount >= TREEIFY_THRESHOLD - 1)
                 treeifyBin(tab, hash);
@@ -2475,7 +2471,7 @@ public V merge(K key, V value,
         // 否则插入链表
         else {
             tab[i] = newNode(hash, key, value, first);
-            // 如果链表结点数量大于 TREEIFY_THRESHOLD，则将链表转化为树。
+            // 如果链表结点数量大于 TREEIFY_THRESHOLD，则调用 treeifyBin 方法。
             // 注意，由于没有算上链表中第一个结点，所以要减 1
             if (binCount >= TREEIFY_THRESHOLD - 1)
                 treeifyBin(tab, hash);
@@ -2528,7 +2524,7 @@ public void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
         throw new NullPointerException();
     if (size > 0 && (tab = table) != null) {
         int mc = modCount;
-        // 遍历所以键值对，进行替换
+        // 遍历所有键值对，进行替换
         for (int i = 0; i < tab.length; ++i) {
             for (Node<K,V> e = tab[i]; e != null; e = e.next) {
                 e.value = function.apply(e.key, e.value);
