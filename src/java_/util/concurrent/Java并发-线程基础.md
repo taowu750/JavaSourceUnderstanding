@@ -530,7 +530,7 @@ class Buffer implements Runnable {
  - 也有可能某些任务根据不同的条件在等待你的对象上的锁（在这种情况下必须使用 `notifyAll()`）。在这种情况下，
  你需要检查是否已经由正确的原因唤醒，如果不是，就再次调用 `wait()`。
  
-### 7.2.3 Condition
+## 7.3 Condition
 
 `java.util.concurrent` 类库中提供了 `Condition` 类来实现线程之间的协调，可以在 `Condition` 上调用 `await()` 方法使线程等待，
 其它线程调用 `signal()` 或 `signalAll()` 方法唤醒等待的线程。相比于 `wait()` 这种等待方式，`await()` 可以指定等待的条件，
@@ -650,6 +650,65 @@ public class DeadLockDemo {
             }
         }, "线程 2").start();
 ```
+
+# 9. Java程序启动时至少启动几个线程
+
+要知道这个问题，我们需要调用 JMX 的 API：
+```java
+public class AllThreads {
+
+    public static void main(String[] args) {
+    	//虚拟机线程管理的接口
+    	ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+    	ThreadInfo[] threadInfos = 
+    	 threadMXBean.dumpAllThreads(false, false);
+    	for(ThreadInfo threadInfo:threadInfos) {
+    		System.out.println("["+threadInfo.getThreadId()+"]"+" "
+    				+threadInfo.getThreadName());
+    	}
+    }
+}
+```
+输出结果：
+```
+[6] Monitor Ctrl-Break
+[5] Attach Listener
+[4] Signal Dispatcher
+[3] Finalizer
+[2] Reference Handler
+[1] main
+```
+可以看到，有 6 个线程。但需要注意的是，Monitor Ctrl-Break 线程是 IDEA 启动的线程，所以 JVM 启动的线程实际上只有 5 个。
+
+## 9.1 Attach Listener
+
+Attach Listener 线程负责接收外部的命令，对该命令进行执行并把结果返回给调用者。
+通常我们会用一些命令去要求 JVM 给我们一些反馈信息，如：`java -version`、`jmap`、`jstack`等等。
+如果该线程在 JVM 启动的时候没有初始化，那么，则会在用户第一次执行 JVM 命令时启动。
+
+## 9.2 Signal Dispatcher
+
+前面我们提到第一个 Attach Listener 线程的职责是接收外部 JVM 命令，当命令接收成功后，会交给 Signal Dispatcher 线程去进行分发到各个不同的模块处理命令，
+并且返回处理结果。Signal Dispatcher 线程也是在第一次接收外部 JVM 命令时，进行初始化工作。
+
+## 9.3 Finalizer
+
+这个线程是在 main 线程之后创建的，主要用于在垃圾收集前，调用对象的 `finalize()` 方法。关于 Finalizer 线程有几个要点：
+ - 只有当开始一轮垃圾收集时，才会开始调用 `finalize()` 方法；因此并不是所有对象的 `finalize()` 方法都会被执行；
+ - 该线程也是后台线程，因此如果虚拟机中没有其他非后台线程，不管该线程有没有执行完 `finalize()` 方法，JVM 也会退出；
+ - JVM 在垃圾收集时会将失去引用的对象包装成 `Finalizer` 对象（`Reference` 的实现），并放入 `ReferenceQueue`，
+ 由 `Finalizer` 线程来处理；最后将该 `Finalizer` 对象的引用置为 null，由垃圾收集器来回收；
+ - JVM 为什么要单独用一个线程来执行 `finalize()` 方法呢？如果 JVM 的垃圾收集线程自己来做，
+ 很有可能由于在 `finalize()` 方法中误操作导致 GC 线程停止或不可控，这对 GC 线程来说是一种灾难。
+
+## 9.4 Reference Handler
+
+JVM 在创建 main 线程后就创建 Reference Handler 线程，其优先级最高，为 10。
+它主要用于处理引用对象本身（软引用、弱引用、虚引用）的垃圾回收问题。
+
+## 9.5 Monitor Ctrl-Break
+
+Monitor Ctrl-Break 线程是在 IDEA 中才有的，而且还是要用 run 启动方式才会出现，debug 模式不会出现。
 
 
 [thread-state]: ../../../../res/img/thread-state.png
