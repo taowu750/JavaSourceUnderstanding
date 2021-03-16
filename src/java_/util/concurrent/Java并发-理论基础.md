@@ -417,8 +417,8 @@ J.U.C 包提供了一个带有标记的原子引用类 `AtomicStampedReference` 
 [java-concurrent-thread-start-rule]: ../../../../res/img/java-concurrent-thread-start-rule.png
 [java-concurrent-thread-join-rule]: ../../../../res/img/java-concurrent-thread-join-rule.png
 
-[sync]: https://www.pdai.tech/md/java/thread/java-thread-x-key-synchronized.html
-[volatile]: https://www.pdai.tech/md/java/thread/java-thread-x-key-volatile.html
-[final]: https://www.pdai.tech/md/java/thread/java-thread-x-key-final.html
+[sync]: 关键字：synchronized详解.md
+[volatile]: 关键字：volatile详解.md
+[final]: 关键字：final详解.md
 
 <b id="f1">\[1\]</b> https://www.pdai.tech/md/java/thread/java-thread-x-theorty.html [↩](#a1)  
