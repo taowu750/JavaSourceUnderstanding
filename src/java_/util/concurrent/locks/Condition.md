@@ -174,6 +174,9 @@ void awaitUninterruptibly();
 会抛出一个异常（如 IllegalMonitorStateException），实现必须记录具体的实施行为。
 
 一个实现可以偏重于响应中断而不是响应 signal。在这种情况下，实现必须确保信号被重定向到另一个等待的线程，如果有的话。
+
+@return nanosTimeout 的估计值减去从本方法返回时的等待时间。如果大于 0 可以作为后续调用本方法的参数，
+以完成所需时间的等待；小于等于零的值表示没有剩余时间。
 */
 long awaitNanos(long nanosTimeout) throws InterruptedException;
 
@@ -223,6 +226,8 @@ boolean await(long time, TimeUnit unit) throws InterruptedException;
 
 实现可以偏向于响应中断而不是响应信号，或者偏向于到达截止日期。无论哪种情况，
 实现都必须确保信号被重定向到另一个等待的线程（如果有的话）。
+
+@return 如果最后期限已过，则为 false，否则为 true。
 */
 boolean awaitUntil(Date deadline) throws InterruptedException;
 ```
