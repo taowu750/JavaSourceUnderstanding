@@ -17,6 +17,8 @@ AQS 提供了一个实现阻塞锁和相关同步器（`ReentrantLock`、`Semaph
 CLH(Craig,Landin,and Hagersten)队列是一个虚拟的双向队列（虚拟的双向队列即不存在队列实例，仅存在结点之间的关联关系）。
 AQS 是将每条请求共享资源的线程封装成一个 CLH 锁队列的一个结点（Node）来实现锁的分配。
 
+AQS 使用 [Unsafe][unsafe] 进行原子操作；使用 [LockSupport][lock-support] 进行线程的阻塞和唤醒控制。
+
 AQS 使用一个 `int` 值来表示状态。子类必须定义改变这个状态的 `protected` 方法，
 这些方法定义了这个状态对这个对象的 acquire 或 release 意味着什么。通过这些，这个类中的其他方法就会执行所有的排队和阻塞机制。
 子类可以维护其他的状态字段，但只有使用方法 `getState`、`setState` 和 `compareAndSetState` 方法原子更新的 `int` 值才会被跟踪与同步。
@@ -882,6 +884,8 @@ protected boolean isHeldExclusively() {
 ```java
 /*
 使用 arg 设置 state（这是自定义的部分），来尝试在独占模式下获取。本方法应该查询对象的状态是否允许以独占模式获取，如果允许则获取。
+
+但同步队列有线程在排队时，可以在此方法中对加塞的线程进行控制，从而实现公平锁。
 
 这个方法总是由执行获取的线程调用。如果该方法返回失败（false），且当前线程（调用此方法的线程）还没有被排队，
 那么 acquire 方法可能会将其排队，直到其他线程发出释放信号。这可以用来实现方法 Lock.tryLock()。
@@ -1836,10 +1840,16 @@ head(SIGNAL) --> t1 --> t2(tail)
 
 那在引入了 `PROPAGATE` 之后又会是怎样的情况呢？此时时刻 3 中就会将 `h.waitStatu` 设为 `PROPAGATE(-3)`，
 那么时刻 4 中虽然不满足 `propagate > 0`，但是 `h.waitStatu < 0`，这样线程 `t2` 就能够正常被唤醒。
-**可以看到，引入了  `PROPAGATE` 之后，不会再错失“锁被释放这一事件**。
+**可以看到，引入了  `PROPAGATE` 之后，不会再错失“锁被释放”这一事件**。
 
-至此我们知道了 `PROPAGATE` 的作用，就是为了避免线程无法会唤醒的窘境。因为共享锁会有很多线程获取到锁或者释放锁，
+至此我们知道了 `PROPAGATE` 的作用，就是为了避免线程无法被唤醒的窘境。因为共享锁会有很多线程获取到锁或者释放锁，
 所以有些方法是并发执行的，就会产生很多中间状态，而 `PROPAGATE` 就是为了让这些中间状态不影响程序的正常运行。
+
+这一切的目的就是为了**找出所有可能的情况，去通知后继节点干活，去最大可能的尝试获取锁**。
+1. 一是当申请到了共享锁，需要唤醒后面节点同样去申请；
+2. 二是释放了锁，需要唤醒后面节点去申请。没错，的确是为了唤醒后继节点让它申请锁。
+
+当然，由此产生的负面影响是可能有线程被错误的唤醒，但是不能获取到锁，从而马上又被阻塞。
 
 ### 4.7.7 doAcquireSharedInterruptibly
 ```java
@@ -2211,5 +2221,7 @@ public final Collection<Thread> getWaitingThreads(ConditionObject condition) {
 ```
 
 
+[unsafe]: ../../../../sun_/misc/Unsafe.md
+[lock-support]: LockSupport.md
 [clh]: http://www.cs.rochester.edu/u/scott/synchronization/
 [condition]: Condition.md
