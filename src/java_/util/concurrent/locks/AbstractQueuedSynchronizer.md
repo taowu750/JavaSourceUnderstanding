@@ -81,17 +81,13 @@ Release:
 ```
 共享模式与上面类似，但可能涉及信号传播。
 
-因为在 `acquire` 中的检查是在入队之前调用的，所以一个新的请求线程可能会在其他被阻塞或排队的线程之前插入。
-然而，你可以根据需要定义 `tryAcquire` 或 `tryAcquireShared`，通过内部调用一个或多个检查方法来禁止插入，从而提供一个公平的 FIFO 获取顺序。
+因为在 `acquire` 中的检查是在入队之前调用的，所以一个新的请求线程可能会在其他被阻塞或排队的线程之前插入，不排队获取锁。
+然而，你可以根据需要定义 `tryAcquire` 或 `tryAcquireShared`，通过内部调用一个或多个检查方法来禁止插入，
+从而提供一个公平的 FIFO 获取顺序（也就是公平锁）。
 特别的，如果 `hasQueuedPredecessors`（一种专门设计用于公平模式同步器的方法）返回 `true`，
 则大多数公平模式同步器都可以让 `tryAcquire` 返回 `false`。
 
 非公平策略吞吐量和可扩展性最高，但可能导致线程饥饿。它的每次锁竞争对传入的线程都是毫无偏向。
-
-同样，尽管 `acquire` 通常不会“旋转”，但是在阻塞之前，它们可能会多次调用 `tryAcquire`，并插入其他计算。
-当仅短暂地保持排他同步时，这将提供旋转的大部分好处，而在不进行排他同步时，则不会带来很多负担。
-如果需要的话，可以通过在调用之前使用“快速路径”检查的 `acquire` 方法来增强此功能，
-并可能预先检查 `hasContended` 或 `hasQueuedThreads` 以便仅在可能不争用同步器的情况下才这样做。
 
 这个类为同步提供了一个高效和可扩展的基础。如果这还不够，你可以使用原子类、自己定制的 `java.util.Queue` 类和 `LockSupport` 阻塞支持，
 从较低的层次构建同步器。
@@ -114,13 +110,14 @@ class Mutex implements Lock, java.io.Serializable {
         public boolean tryAcquire(int acquires) {
             assert acquires == 1; // 否则无效
             if (compareAndSetState(0, 1)) {
+                // 记录当前持有锁的线程
                 setExclusiveOwnerThread(Thread.currentThread());
                 return true;
             }
             return false;
         }
 
-        // 通过将状态设置为零来释放锁定
+        // 通过将状态设置为零来释放锁
         protected boolean tryRelease(int releases) {
             assert releases == 1; // 否则无效
             if (getState() == 0) throw new IllegalMonitorStateException();
@@ -192,7 +189,7 @@ CLH 队列中保存的是暂时获取不到锁的线程。
 
 注意**队列中的一个节点只有在成功获得锁后才会成为头节点，并且头节点永远不会被取消**。
 
-**我们还使用 `next` 链接来实现阻塞机制**。每个节点保存自己的线程，因此前驱节点通过 `next` 链接以确定下一个节点是哪个线程，
+**我们还使用 `next` 链接来实现阻塞和唤醒机制**。每个节点保存自己的线程，因此前驱节点通过 `next` 链接以确定下一个节点是哪个线程，
 并通知其唤醒。新入队节点会设置其前驱结点的 `next` 字段，因此使用 `next` 链接需要避免与新入队的节点竞争。必要时，
 当一个节点的后继结点为 `null` 时，通过从 `tail` 开始向前检查来确定下一个节点。（换句话说，`next` 链接是一种优化，
 因此我们通常不需要向后扫描。）
@@ -221,7 +218,7 @@ static final int SIGNAL    = -1;
 // waitStatus 值：表示线程正在等待 Condition，也就是在 Condition 队列中。
 static final int CONDITION = -2;
 
-// waitStatus 值：表示下一次获取共享锁应该无条件传播。
+// waitStatus 值：表示共享锁可能可以被后面在共享模式下阻塞的节点获取（传播）。
 static final int PROPAGATE = -3;
 
 /*
@@ -235,8 +232,8 @@ static final int PROPAGATE = -3;
  - CONDITION：
     该节点当前处于 Condition 队列中。在被转移到同步队列之前，它不会被用作同步队列节点；转移到同步队列之后，状态字段将被设置为 0。
  - PROPAGATE：
-    一个 releaseShared 应该被传播到其他节点。在 doReleaseShared 中只对 head 设置这个值，以确保传播继续，
-    即使其他操作已经介入。
+    表示共享锁可能可以被后面在共享模式下阻塞的节点获取（传播）。也就是有线程调用了 releaseShared 释放了锁。
+    在 doReleaseShared 中只对 head 设置这个值，以确保传播继续，即使其他操作已经介入。
     共享锁的传播性目的是尽快唤醒同步队列中等待的线程，使其尽快获取资源（锁），但是也有一定的副作用，可能会造成不必要的唤醒。
  - 0：
     中间状态，表示当前节点在同步队列中，还没有阻塞，并准备尝试获取锁。
@@ -265,7 +262,6 @@ volatile Node prev;
 但是，如果一个 next 字段为 null，我们可以从 tail 向前扫描来再次检查。
 
 被取消的节点的 next 字段被设置为指向节点本身，而不是 null，以方便 isOnSyncQueue 的操作。
-（当节点的 next 字段不为 null 时，isOnSyncQueue 会认为它在同步队列中）
 */
 volatile Node next;
 
