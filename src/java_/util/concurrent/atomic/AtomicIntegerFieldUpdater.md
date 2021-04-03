@@ -2,21 +2,23 @@
 ```java
 public abstract class AtomicIntegerFieldUpdater<T>
 ```
-一个基于反射的源自类，可以对指定类的指定 `volatile int` 字段进行原子更新。该类被设计用于原子数据结构中，
+一个基于反射的原子类，可以对指定类的指定 `volatile int` 字段进行原子更新。该类被设计用于原子数据结构中，
 其中同一节点的多个字段被独立地进行原子更新。
 
 请注意，该类中 `compareAndSet` 方法的保证比其他原子类中的保证要弱。因为这个类不能保证字段的所有使用都适合原子访问的目的，
 所以它只能保证在同一更新器上对 `compareAndSet`、`set` 以及其他调用的原子性。
 
-由于 `AtomicIntegerFieldUpdater` 是基于反射的原子更新字段的值。要想原子地更新字段类需要满足以下条件:
+由于 `AtomicIntegerFieldUpdater` 是基于反射的原子更新字段的值。要想原子地更新字段，需要满足以下条件:
  - 因为 `AtomicIntegerFieldUpdater` 是抽象类，每次使用的时候必须使用静态方法 `newUpdater()` 创建一个更新器，
 然后设置想要更新的类和属性。
  - 想要更新的类的字段必须使用 `volatile` 修饰。
- - 字段的描述类型（修饰符 `public/protected/default/private`）是与调用者与操作对象字段的关系一致。
- 也就是说调用者能够直接操作对象字段，那么就可以反射进行原子操作。
+ - 字段的访问控制权限（修饰符 `public/protected/default/private`）需要与调用者一致。
+ 也就是说如果调用者能够直接操作对象字段，那么就可以反射地进行原子操作。
  - 对于父类的字段，子类是不能直接操作的，尽管子类可以访问父类的字段。
  - 只能是实例变量，不能是类变量，也就是说不能加 `static` 关键字。
- - 只能是可修改变量，不能使 `final` 变量，因为 `final` 的语义就是不可修改。
+ - 只能是可修改变量，不能是 `final` 变量，因为 `final` 的语义就是不可修改。
+
+相关测试参见 [AtomicIntegerFieldUpdaterTest][test]。
 
 # 1. 构造器
 ```java
@@ -217,8 +219,8 @@ private final long offset;
 
 // 传入的想要更新的类
 private final Class<T> tclass;
-// 如果字段是 protected，newUpdater() 方法的调用者是 tclass 的子类且不在同一个包下，
-// 则保存调用者的 Class，否则它和 tclass 一样。
+// 如果字段被 protected 修饰，目标类是调用类的父类，并且调用类和目标类不在同一个包下时，cclass 存储调用者的类；
+// 否则 cclass 和 tclass 相同。这是为了抛出异常的时候能够提供更准确的信息。
 private final Class<?> cclass;
 ```
 
@@ -238,14 +240,16 @@ AtomicIntegerFieldUpdaterImpl(final Class<T> tclass,
                     }
                 });
         modifiers = field.getModifiers();
-        // 确保 field 是可访问的（field 是 public；或者是 protected，而调用者是 tclass 的子类）
+        // 确保 field 是可访问的（也就是调用者可以直接访问这个 field）
         sun.reflect.misc.ReflectUtil.ensureMemberAccess(
                 caller, tclass, null, modifiers);
+        // 获取传入类的类加载器
         ClassLoader cl = tclass.getClassLoader();
+        // 获取调用类的类加载器
         ClassLoader ccl = caller.getClassLoader();
-        // 确保调用者是否有权限访问 tclass
         if ((ccl != null) && (ccl != cl) &&
             ((cl == null) || !isAncestor(cl, ccl))) {
+            // 如果这两个类的类加载器没有委派关系则进行包可访问性检查
             sun.reflect.misc.ReflectUtil.checkPackageAccess(tclass);
         }
     } catch (PrivilegedActionException pae) {
@@ -254,15 +258,17 @@ AtomicIntegerFieldUpdaterImpl(final Class<T> tclass,
         throw new RuntimeException(ex);
     }
 
+    // 必须要为 int
     if (field.getType() != int.class)
         throw new IllegalArgumentException("Must be integer type");
 
+    // 操作的属性必须要用 volatile
     if (!Modifier.isVolatile(modifiers))
         throw new IllegalArgumentException("Must be volatile type");
 
     /*
-    如果想要修改的是 protected 字段（此时调用者必须是 tclass 的子类），调用者是 tclass 的子类且不在一个包下，
-    那么对象参数必须是调用者 Class 的实例（或子类实例）。
+    如果字段被 protected 修饰，目标类是调用类的父类，并且调用类和目标类不在同一个包下时，cclass 存储调用者的类；
+    否则 cclass 和 tclass 相同。这一步的目的是为了抛出异常的时候能够提供更准确的信息。
     */
     this.cclass = (Modifier.isProtected(modifiers) &&
                    tclass.isAssignableFrom(caller) &&
@@ -273,7 +279,7 @@ AtomicIntegerFieldUpdaterImpl(final Class<T> tclass,
     this.offset = U.objectFieldOffset(field);
 }
 
-// 如果第二个类加载器是第一个类加载器的祖先，返回 true。
+// 如果第二个类加载器是第一个类加载器的祖先，即两个类加载器有委派关系，返回 true。
 private static boolean isAncestor(ClassLoader first, ClassLoader second) {
     ClassLoader acl = first;
     do {
@@ -308,6 +314,7 @@ private final void accessCheck(T obj) {
 }
 
 private final void throwAccessCheckException(T obj) {
+    // 根据类型的不同抛出不同的异常
     if (cclass == tclass)
         throw new ClassCastException();
     else
@@ -403,3 +410,6 @@ public final int addAndGet(T obj, int delta) {
     return getAndAdd(obj, delta) + delta;
 }
 ```
+
+
+[test]: ../../../../../test/java_/util/concurrent/atomic/AtomicIntegerFieldUpdaterTest.java
