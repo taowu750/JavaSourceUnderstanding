@@ -319,7 +319,7 @@ executorService.execute(() -> {
 
 详细分析请看：
  - [关键字: Synchronized详解][sync]
- - JUC锁: ReentrantLock详解
+ - [JUC 锁: ReentrantLock 详解][lock]
 
 ## 7.2 非阻塞同步
 
@@ -372,7 +372,9 @@ public final int getAndAddInt(Object var1, long var2, int var4) {
 
 如果一个变量初次读取的时候是 A 值，它的值被改成了 B，后来又被改回为 A，那 CAS 操作就会误认为它从来没有被改变过。
 
-J.U.C 包提供了一个带有标记的原子引用类 `AtomicStampedReference` 来解决这个问题，它可以通过控制变量值的版本来保证 CAS 的正确性。
+ABA 问题的具体实例参见 [AtomicStampedReference.md][atomic]。
+
+JUC 包提供了一个带有标记的原子引用类 `AtomicStampedReference` 来解决这个问题，它可以通过控制变量值的版本来保证 CAS 的正确性。
 大部分情况下 ABA 问题不会影响程序并发的正确性，如果需要解决 ABA 问题，改用传统的互斥同步可能会比原子类更高效。
 
 ## 7.3 无同步方案
@@ -418,7 +420,9 @@ J.U.C 包提供了一个带有标记的原子引用类 `AtomicStampedReference` 
 [java-concurrent-thread-join-rule]: ../../../../res/img/java-concurrent-thread-join-rule.png
 
 [sync]: 关键字：synchronized详解.md
+[lock]: locks/ReentrantLock.md
 [volatile]: 关键字：volatile详解.md
 [final]: 关键字：final详解.md
+[atomic]: atomic/AtomicStampedReference.md
 
 <b id="f1">\[1\]</b> https://www.pdai.tech/md/java/thread/java-thread-x-theorty.html [↩](#a1)  
