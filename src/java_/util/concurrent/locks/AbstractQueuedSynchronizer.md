@@ -1607,13 +1607,18 @@ final int fullyRelease(Node node) {
 
 注意，同步队列是独占模式和共享模式公用的。
 对于独占模式的节点，即如果 head 是 Node.SIGNAL，此方法相当于对 head 调用 unparkSuccessor 方法。
+
+调用 doReleaseShared 函数的线程可能有两种：
+1. 一是刚获取到共享锁的线程（一定情况下，才调用 doReleaseShared），参见下面的 setHeadAndPropagate 方法；
+2. 二是释放共享锁的线程（肯定调用），参见下面的 releaseShared 方法。
 */
 private void doReleaseShared() {
     /*
-    如果 head 的后继节点需要 signal，则按照通常的方式尝试 unpark 它。
-    但如果不需要，则将状态设置为 PROPAGATE，以确保在释放时，传播继续。
+    尝试唤醒 head 的后继线程，如果线程已经唤醒，则仅仅设置 head 的 PROPAGATE 状态，
+    保证这次释放操作被记录，能够正确地传播。
     
-    为了确保释放操作被记录，能够正确地传播，如果头节点被改变了，就继续循环。
+    当检测到头结点被改变时，说明有 acquire 线程刚获取了锁，那下一个等待线程也很可能可以获取锁，
+    所以继续循环。
     */
     for (;;) {
         Node h = head;
@@ -1630,12 +1635,20 @@ private void doReleaseShared() {
                 // 也可能唤醒后因为没有共享锁可以获取而再次阻塞
                 unparkSuccessor(h);
             }
-            // state: 0 -> PROPAGATE。
+            /*
+            state: 0 -> PROPAGATE。
+
+            state 为 0，说明 h 的后继节点线程已经被唤醒或即将被唤醒，并且这个中间状态即将消失：
+             - 要么因为 acquire 线程获取锁失败设置 head 为 SIGNAL 并被阻塞；
+             - 要么由于 acquire 线程获取锁成功而将自己设置为新 head。并且只要它的后继不是队尾，那么新 head 肯定为 SIGNAL。
+            
+            所以设置这种中间状态的 head 的 state 为 PROPAGATE，让其 state 又变成负数，这样又可能被唤醒线程检测到。
+            */
             else if (ws == 0 &&
                      !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
                 continue;                // 失败时继续循环设置状态
         }
-        // 可能被唤醒的节点立刻获取了锁出队列，导致 head 变了，所以继续循环唤醒 head 后继节点。
+        // 可能被唤醒的节点立刻获取了锁出队列，导致 head 变了，所以继续循环唤醒 head 后继节点（共享锁的传播性）。
         if (h == head)
             break;
     }
