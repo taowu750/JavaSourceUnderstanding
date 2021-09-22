@@ -1335,7 +1335,7 @@ final boolean acquireQueued(final Node node, int arg) {
             }
             /*
             之前尝试 acquire 失败了。
-             - 如果前驱节点 p 是 SIGNAL 状态，尝试 park 当前线程（调用此方法的线程，也是 node 的线程）。
+             - 如果前驱节点 p 是 SIGNAL 状态，则 park 当前线程（调用此方法的线程，也是 node 的线程）。
                因为获取锁失败后，就需要被阻塞。之后某个线程对本线程 unpark（release 中）或当前线程被中断后，再往下运行。
              - 否则如果前驱节点被取消了，向前查找并更新 node 的前驱节点。
              - 否则尝试更新 node 的前驱节点状态为 SIGNAL，继续下次循环 acquire 或 park。
@@ -1355,7 +1355,10 @@ final boolean acquireQueued(final Node node, int arg) {
 }
 ```
 
+可以看到，`SIGNAL` 标志为什么要先放在前面节点上，有了这个标志再 `park` 自己，为什么不放自己节点上呢？这是由于 `CANCELLED` 节点的处理逻辑导致的，在 JDK8 中，`CANCELLED` 节点并不会立即被清除，如果`SIGNAL` 放在自己节点上，其他线程要知道下一个未 `CANCELLED` 的节点是否需要唤醒，就需要去遍历（从后往前避免冲突失效）找到节点，再根据节点状态判断，这是比较耗时的。
+
 ### 4.6.2 acquire
+
 ```java
 /*
 以独占模式获取，忽略中断。
@@ -1555,10 +1558,9 @@ public final boolean release(int arg) {
     if (tryRelease(arg)) {
         Node h = head;
         /*
-        当同步队列不为空，或者虚拟头节点 waitStatus 不等于 0 时，尝试唤醒 head 后面第一个没有被取消的结点。
-        头节点状态值不会等于 CANCELED(1)。
+        当同步队列不为空，或者虚拟头节点 waitStatus 不等于 0 时，尝试唤醒 head 后面第一个没有被取消的结点。头节点状态值不会等于 CANCELED(1)。
         
-        后面的节点会在 acquire 中将前面的节点设为 SIGNAL，所以在这里才能通过 if 检查
+        后面的节点会在 acquire 中将前面的节点设为 SIGNAL，这样头结点也就知道后面还有在等待的任务
         */
         if (h != null && h.waitStatus != 0)
             unparkSuccessor(h);
